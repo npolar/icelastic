@@ -1,0 +1,97 @@
+require "icelastic"
+require "elasticsearch"
+
+module Icelastic
+
+  # The client is a wrapper around the elasticsearch-ruby client library.
+  # It acts as an interface between the middlware and the query,result objects.
+  #
+  # [Functionality]
+  #   This library provides CRUD behavior for elasticsearch using the custom
+  #   query and response objects defined in this library
+  #
+  # [Authors]
+  #   - Ruben Dens
+  #
+  # @see https://github.com/elasticsearch/elasticsearch-ruby Elasticsearch-Ruby on github
+
+  class Client
+
+    # Unless overriden this minimal set of query
+    # parameters are used as defaults.
+    PARAMS = {
+      :start => 0,
+      :limit => 25
+    }
+
+    attr_accessor :client, :params, :url, :search_index, :type, :log, :env, :response
+
+    def initialize(config={})
+      self.url = config[:url] if config.has_key?(:url)
+      self.search_index = config[:index] if config.has_key?(:index)
+      self.type = config[:type] if config.has_key?(:type)
+      self.log = config.has_key?(:log) ? config[:log] : false
+      self.client = url.nil? ? Elasticsearch::Client.new : Elasticsearch::Client.new(:url => url, :log => log)
+      self.params = config.has_key?(:params) ? PARAMS.merge(config[:params]) : PARAMS
+    end
+
+    # Execute a search operation
+    def search(request)
+      self.env = request.env
+      self.response = client.search({:body => query, :index => search_index, :type => type})
+      result
+    end
+
+    # Index or update a single document
+    def index(request)
+      body = JSON.parse(request.env['rack.input'].read)
+      client.index :index => search_index, :type => type, :id => body["id"], :body => body
+    end
+
+    # Execute bulk index and update operations
+    def bulk(request)
+      body = JSON.parse(request.env['rack.input'].read)
+      client.bulk :body => bulk_operations(body)
+    end
+
+    private
+
+    def query
+      q = Icelastic::Query.new
+      q.params = request_params
+      q.build
+    end
+
+    def result
+      self.env = env.merge({"QUERY_STRING" => request_params.map{|k,v| "#{k}=#{v}"}.join('&')})
+      r = Icelastic::Result.new(Rack::Request.new(env), response)
+      r.feed.to_json
+    end
+
+    def request_params
+      p = CGI.parse(env['QUERY_STRING'])
+      p.each {|k,v| p[k] = v.join(",")}
+      self.params = hash_key_to_s(params.merge(p))
+    end
+
+    # Casts hash keys to String
+    def hash_key_to_s(hash)
+      hash.inject({}){|memo,(k,v)| memo[k.to_s] = v; memo}
+    end
+
+    # Generate an array of bulk operations for an array of documents
+    def bulk_operations(body)
+      body.map! do |e|
+        {
+          :index => {
+            :_index => search_index,
+            :_type => type,
+            :_id => e["id"],
+            :data => e
+          }
+        }
+      end
+    end
+
+  end
+end
