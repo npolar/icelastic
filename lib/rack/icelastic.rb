@@ -1,6 +1,3 @@
-require "icelastic"
-require "rack"
-
 module Rack
 
   # Middlware allowing easy integration of Icelastic
@@ -14,6 +11,9 @@ module Rack
     attr_accessor :env
 
     def initialize(app=nil, options={})
+
+      app = lambda{|env| [200, {"Content-Type" => "application/json"}, [{"error" => "404 Not Found"}.to_json]]} if app.nil?
+
       @app, @config = app, options
     end
 
@@ -21,7 +21,7 @@ module Rack
       self.env = env
 
       # Execute a search and return the response if a search request
-      return client.search(request) if search?
+      return [200, {"Content-Type" => "application/json; charset=utf-8"}, [client.search(request)]] if search?
 
       @app.call(env)
     end
