@@ -63,29 +63,37 @@ module Icelastic
     # term and date_histogram facets.
     def facets
       if response.has_key?("facets")
+        wrapper = []
         fb = response["facets"]
         fb.each do |k,v|
           ["terms", "entries"].each do |type|
             if v.has_key?(type)
-              fb[k] = v[type].map do |e|
-                term = e["term"] ? e["term"] : handle_facet_time(k, e["time"])
-                {
-                  :term => term,
-                  :count => e["count"],
-                  :uri => build_facet_uri(k, term)
-                  #:query => build_facet_query(k, term)
-                }
-              end
+              wrapper << {
+                k => v[type].map do |e|
+                  term = e["term"] ? e["term"] : handle_facet_time(k, e["time"])
+                  {
+                    :term => term,
+                    :count => e["count"],
+                    :uri => build_facet_uri(k, term)
+                    #:query => build_facet_query(k, term)
+                  }
+                end
+              }
             end
           end
         end
+        wrapper
       end
     end
 
     # Object holding response documents
     def entries
       return response['hits']['hits'].map{|e| e['fields']} if request_params.has_key?('fields')
-      response['hits']['hits'].map{|e| e['_source']}
+      response['hits']['hits'].map do |e|
+        b = e.delete('_source')
+        b['highlight'] = e['highlight']['_all'].join('... ') if e['highlight']
+        b
+      end
     end
 
     private
