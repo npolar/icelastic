@@ -247,9 +247,13 @@ module Icelastic
       params.select{|k,v| k=~ /^facets$|^facet-(.+)$|^stat-(.+)$|^stats$|^date-(year|month|day)$/}
     end
 
+    def facet_size
+      params['size-facet'] ? params['size-facet'].to_i : 10
+    end
+
     # Return a term facet segment
     def facet_term(field)
-      {:terms => {:field => field}}
+      {:terms => {:field => field,:size => facet_size}}
     end
 
     # Check if the facet is a multi_facet
