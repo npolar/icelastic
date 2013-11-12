@@ -163,19 +163,19 @@ describe Icelastic::Result do
       end
 
       it "be an array" do
-        @r.facets["topics"].should be_a( Array )
+        @r.facets.first["topics"].should be_a( Array )
       end
 
       it "return term" do
-        @r.facets["topics"][0].should include(:term => "test")
+        @r.facets.first["topics"][0].should include(:term => "test")
       end
 
       it "return count" do
-        @r.facets["topics"][0].should include(:count => 10)
+        @r.facets.first["topics"][0].should include(:count => 10)
       end
 
       it "return uri" do
-        @r.facets["topics"][0].should include(
+        @r.facets.first["topics"][0].should include(
           :uri => "http://example.org/endpoint?q=&facets=topics&filter-topics=test"
         )
       end
@@ -183,22 +183,22 @@ describe Icelastic::Result do
       context "Uri" do
 
         it "add filter when not present" do
-          @r.facets["topics"][0][:uri].should include("q=&facets=topics&filter-topics=test")
+          @r.facets.first["topics"][0][:uri].should include("q=&facets=topics&filter-topics=test")
         end
 
         it "add value when filter exists" do
           r = result(http_search("q=&facets=topics&filter-topics=biology"), @response)
-          r.facets["topics"][0][:uri].should include("q=&facets=topics&filter-topics=biology,test")
+          r.facets.first["topics"][0][:uri].should include("q=&facets=topics&filter-topics=biology,test")
         end
 
         it "remove filter when already request url" do
           r = result(http_search("q=&facets=topics&filter-topics=biology,test"), @response)
-          r.facets["topics"][0][:uri].should include("q=&facets=topics&filter-topics=biology")
+          r.facets.first["topics"][0][:uri].should include("q=&facets=topics&filter-topics=biology")
         end
 
         it "have correct uri scheme for SSL" do
           r = result(ssl_search("q=&facets=topics"), @response)
-          r.facets["topics"][0][:uri].should include("https://example.org/endpoint?q=&facets=topics&filter-topics=test")
+          r.facets.first["topics"][0][:uri].should include("https://example.org/endpoint?q=&facets=topics&filter-topics=test")
         end
 
       end
@@ -212,7 +212,7 @@ describe Icelastic::Result do
               "day-created"=>{"_type"=>"date_histogram", "entries"=>[
               {"time"=>1230768000000, "count"=>1}]}}}
             )
-            r.facets["day-created"][0].should include(:term => "2009-01-01")
+            r.facets.first["day-created"][0].should include(:term => "2009-01-01")
           end
 
           it "return yyyy-mm format for month interval" do
@@ -220,7 +220,7 @@ describe Icelastic::Result do
               "month-created"=>{"_type"=>"date_histogram", "entries"=>[
               {"time"=>1230768000000, "count"=>1}]}}}
             )
-            r.facets["month-created"][0].should include(:term => "2009-01")
+            r.facets.first["month-created"][0].should include(:term => "2009-01")
           end
 
           it "return yyyy format for year interval" do
@@ -228,7 +228,7 @@ describe Icelastic::Result do
               "year-created"=>{"_type"=>"date_histogram", "entries"=>[
               {"time"=>1230768000000, "count"=>1}]}}}
             )
-            r.facets["year-created"][0].should include(:term => "2009")
+            r.facets.first["year-created"][0].should include(:term => "2009")
           end
 
           it "return iso8601 for unknown interval" do
@@ -236,7 +236,7 @@ describe Icelastic::Result do
               "hour-created"=>{"_type"=>"date_histogram", "entries"=>[
               {"time"=>1230768000000, "count"=>1}]}}}
             )
-            r.facets["hour-created"][0].should include(:term => "2009-01-01T00:00:00Z")
+            r.facets.first["hour-created"][0].should include(:term => "2009-01-01T00:00:00Z")
           end
 
         end
@@ -248,7 +248,7 @@ describe Icelastic::Result do
               "day-created"=>{"_type"=>"date_histogram", "entries"=>[
               {"time"=>1230768000000, "count"=>1}]}}}
             )
-            r.facets["day-created"][0].should include(
+            r.facets.first["day-created"][0].should include(
               :uri => "http://example.org/endpoint?q=&filter-created=2009-01-01T00:00:00Z..2009-01-02T00:00:00Z"
             )
           end
@@ -258,7 +258,7 @@ describe Icelastic::Result do
               "month-created"=>{"_type"=>"date_histogram", "entries"=>[
               {"time"=>1230768000000, "count"=>1}]}}}
             )
-            r.facets["month-created"][0].should include(
+            r.facets.first["month-created"][0].should include(
               :uri => "http://example.org/endpoint?q=&filter-created=2009-01-01T00:00:00Z..2009-02-01T00:00:00Z"
             )
           end
@@ -268,7 +268,7 @@ describe Icelastic::Result do
               "year-created"=>{"_type"=>"date_histogram", "entries"=>[
               {"time"=>1230768000000, "count"=>1}]}}}
             )
-            r.facets["year-created"][0].should include(
+            r.facets.first["year-created"][0].should include(
               :uri => "http://example.org/endpoint?q=&filter-created=2009-01-01T00:00:00Z..2010-01-01T00:00:00Z"
             )
           end
