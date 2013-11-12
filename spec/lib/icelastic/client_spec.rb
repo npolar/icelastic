@@ -1,7 +1,4 @@
 require "spec_helper"
-require "icelastic/client"
-
-require "elasticsearch"
 
 describe Icelastic::Client do
 
@@ -90,7 +87,7 @@ describe Icelastic::Client do
     context "#search" do
 
       it "return a feed response" do
-        JSON.parse(@client.search(search_request)).should include("opensearch","entries")
+        JSON.parse(@client.search(search_request)).should include("feed")
       end
 
     end
