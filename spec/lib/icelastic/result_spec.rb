@@ -1,5 +1,4 @@
 require "spec_helper"
-require "icelastic/result.rb"
 
 describe Icelastic::Result do
 
@@ -52,7 +51,7 @@ describe Icelastic::Result do
       @r.stub(:search){nil}
       @r.stub(:facets){nil}
       @r.stub(:entries){nil}
-      @r.feed.should include(:opensearch, :list, :search, :facets, :entries)
+      @r.feed.should include(:feed)
     end
 
     context "Opensearch" do
@@ -181,35 +180,25 @@ describe Icelastic::Result do
         )
       end
 
-      it "return query" do
-        @r.facets["topics"][0].should include(:query)
-      end
-
-      context "Query" do
+      context "Uri" do
 
         it "add filter when not present" do
-          @r.facets["topics"][0].should include(:query => "q=&facets=topics&filter-topics=test")
+          @r.facets["topics"][0][:uri].should include("q=&facets=topics&filter-topics=test")
         end
 
         it "add value when filter exists" do
           r = result(http_search("q=&facets=topics&filter-topics=biology"), @response)
-          r.facets["topics"][0].should include(:query => "q=&facets=topics&filter-topics=biology,test")
+          r.facets["topics"][0][:uri].should include("q=&facets=topics&filter-topics=biology,test")
         end
 
         it "remove filter when already request url" do
           r = result(http_search("q=&facets=topics&filter-topics=biology,test"), @response)
-          r.facets["topics"][0].should include(:query => "q=&facets=topics&filter-topics=biology")
+          r.facets["topics"][0][:uri].should include("q=&facets=topics&filter-topics=biology")
         end
-
-      end
-
-      context "Uri" do
 
         it "have correct uri scheme for SSL" do
           r = result(ssl_search("q=&facets=topics"), @response)
-          r.facets["topics"][0].should include(
-            :uri => "https://example.org/endpoint?q=&facets=topics&filter-topics=test"
-          )
+          r.facets["topics"][0][:uri].should include("https://example.org/endpoint?q=&facets=topics&filter-topics=test")
         end
 
       end
