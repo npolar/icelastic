@@ -1,5 +1,3 @@
-require "time"
-
 module Icelastic
 
   # This class provides custom result wrappers for elasticsearch

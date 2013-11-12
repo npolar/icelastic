@@ -1,6 +1,3 @@
-require "icelastic"
-require "elasticsearch"
-
 module Icelastic
 
   # The client is a wrapper around the elasticsearch-ruby client library.

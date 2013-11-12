@@ -1,5 +1,3 @@
-require "json"
-
 module Icelastic
   
   # This class is used to build elasticsearch queries from url parameters
