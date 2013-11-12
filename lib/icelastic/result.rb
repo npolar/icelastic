@@ -159,7 +159,7 @@ module Icelastic
     # Returns a range syntax for the provided interval and time
     def time_range(interval, time)
       year, month, day = time.split("-").map{|e| e.to_i}
-      
+
       date = case interval
       when "day" then Date.new(year, month, day).next_day
       when "month" then Date.new(year, month).next_month
