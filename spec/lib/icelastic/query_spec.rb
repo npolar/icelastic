@@ -376,10 +376,10 @@ describe Icelastic::Query do
         subject.facets.should == {
           :facets => {
             "topics" => {
-              :terms => {:field => "topics"}
+              :terms => {:field => "topics", :size => 10}
             },
             "tags" => {
-              :terms => {:field => "tags"}
+              :terms => {:field => "tags", :size => 10}
             }
           }
         }
@@ -390,7 +390,7 @@ describe Icelastic::Query do
         subject.facets.should == {
           :facets => {
             "my_facet" => {
-              :terms => {:field => "test"}
+              :terms => {:field => "test", :size => 10}
             }
           }
         }
@@ -401,13 +401,24 @@ describe Icelastic::Query do
         subject.facets.should == {
           :facets => {
             "link" => {
-              :terms => {:field => "link"}
+              :terms => {:field => "link", :size => 10}
             },
             "tags" => {
-              :terms => {:field => "tags"}
+              :terms => {:field => "tags", :size => 10}
             },
             "keywords" => {
-              :terms => {:field => "topics"}
+              :terms => {:field => "topics", :size => 10}
+            }
+          }
+        }
+      end
+
+      it "handle size-facet=<val>" do
+        subject.params = "q=&facet-my_facet=test&size-facet=15"
+        subject.facets.should == {
+          :facets => {
+            "my_facet" => {
+              :terms => {:field => "test", :size => 15}
             }
           }
         }
