@@ -20,12 +20,13 @@ module Icelastic
 
     # Object containing a feed response
     def feed
-      {
-        :opensearch => opensearch,
-        :list => list,
-        :search => search,
-        :facets => facets,
-        :entries => entries
+      {:feed => {
+          :opensearch => opensearch,
+          :list => list,
+          :search => search,
+          :facets => facets,
+          :entries => entries
+        }
       }
     end
 
@@ -73,8 +74,8 @@ module Icelastic
                 {
                   :term => term,
                   :count => e["count"],
-                  :uri => build_facet_uri(k, term),
-                  :query => build_facet_query(k, term)
+                  :uri => build_facet_uri(k, term)
+                  #:query => build_facet_query(k, term)
                 }
               end
             end
