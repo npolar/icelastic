@@ -6,15 +6,11 @@ TODO: Write a gem description
 
 Add this line to your application's Gemfile:
 
-    gem 'icelastic'
+    gem 'icelastic', :git => "git://github.com/npolar/icelastic.git"
 
 And then execute:
 
     $ bundle
-
-Or install it yourself as:
-
-    $ gem install icelastic
 
 ## Usage
 
