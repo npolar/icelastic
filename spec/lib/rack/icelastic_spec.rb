@@ -1,5 +1,4 @@
 require "spec_helper"
-require "rack/icelastic"
 
 describe Rack::Icelastic do
 
@@ -31,7 +30,7 @@ describe Rack::Icelastic do
       end
 
       it "search when it has a query string" do
-        app.call(env).should include("opensearch")
+        app.call(env)[2].first.should include("feed")
       end
 
     end
