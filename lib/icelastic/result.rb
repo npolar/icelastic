@@ -63,8 +63,7 @@ module Icelastic
     # term and date_histogram facets.
     def facets
       if response.has_key?("facets")
-        wrapper = []
-        fb = response["facets"]
+        wrapper, fb = [], response["facets"]
         fb.each do |k,v|
           ["terms", "entries"].each do |type|
             wrapper << { k => map_facet_terms(k, v[type]) } if v.has_key?(type)
