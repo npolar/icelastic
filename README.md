@@ -14,7 +14,7 @@ And then execute:
 
 ## Usage
 
-### Middlware
+### Middleware
 
 ```ruby
 
