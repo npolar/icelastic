@@ -32,6 +32,7 @@ module Icelastic
       query = {}
       query.merge!(start)
       query.merge!(limit)
+      query.merge!(sort)
       query.merge!(fields) unless fields.nil?
       query.merge!(highlight)
       query.merge!(query_block)

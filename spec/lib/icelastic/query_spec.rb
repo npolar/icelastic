@@ -42,6 +42,7 @@ describe Icelastic::Query do
         subject.stub(:fields){{:fields => [:called]}}
         subject.stub(:highlight){{:highlight => :called}}
         subject.stub(:facets){{:facets => {:term => :called}}}
+        subject.stub(:sort){{:sort => [:called]}}
       end
 
       it "generate complete json query" do
@@ -49,6 +50,7 @@ describe Icelastic::Query do
         subject.build.should == {
           :from => 0,
           :size => 25,
+          :sort => [:called],
           :fields => [:called],
           :highlight => :called,
           :query => :called,
@@ -59,7 +61,7 @@ describe Icelastic::Query do
     end
 
     context "#query_block" do
-      
+
       it "generate regular query syntax" do
         subject.params = "q="
         subject.stub(:global_query){:global_query_called}
