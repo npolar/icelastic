@@ -24,11 +24,11 @@ And then execute:
       :type => "test",
       :log => false, # Enables logging in elasticsearch-ruby
       :params => {
-        "facets" => "topics,tags",
-        "date-year" => "created,updated",
-        "start" => 0,
-        "limit" => 10,
-        "size-facet" => 25
+        "facets" => "topics,tags", # Fields to facet
+        "date-month" => "created,updated", # Date facets with a month interval
+        "start" => 0, # Start of result page
+        "limit" => 20, # Items per page
+        "size-facet" => 5 # Number of facet items
       }
     }
 
@@ -44,11 +44,11 @@ And then execute:
       :type => "test",
       :log => false, # Enables logging in elasticsearch-ruby
       :params => {
-        "facets" => "topics,tags",
-        "date-year" => "created,updated",
-        "start" => 0,
-        "limit" => 10,
-        "size-facet" => 25
+        "facets" => "topics,tags", # Fields to facet
+        "date-year" => "created,updated", # Date facets with a year interval
+        "start" => 0, # Start of result page
+        "limit" => 10, # Items per page
+        "size-facet" => 25 # Number of facet items
       }
     }
 
