@@ -14,7 +14,45 @@ And then execute:
 
 ## Usage
 
-TODO: Write usage instructions here
+### Middlware
+
+```ruby
+
+    use Rack::Icelastic, {
+      :url => "http://localhost:9200",
+      :index => "example",
+      :type => "test",
+      :log => false, # Enables logging in elasticsearch-ruby
+      :params => {
+        "facets" => "topics,tags",
+        "date-year" => "created,updated",
+        "start" => 0,
+        "limit" => 10,
+        "size-facet" => 25
+      }
+    }
+
+```
+
+### App
+
+```ruby
+
+    run Rack::Icelastic.new nil, {
+      :url => "http://localhost:9200",
+      :index => "example",
+      :type => "test",
+      :log => false, # Enables logging in elasticsearch-ruby
+      :params => {
+        "facets" => "topics,tags",
+        "date-year" => "created,updated",
+        "start" => 0,
+        "limit" => 10,
+        "size-facet" => 25
+      }
+    }
+
+```
 
 ## Contributing
 
