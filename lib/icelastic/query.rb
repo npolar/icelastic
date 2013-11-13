@@ -324,18 +324,16 @@ module Icelastic
     def handle_facets
       fc = {}
       facet_params.each do |key, field|
+        k = key.gsub(/^facet-|^stat-|^date-/, '')
         if multi_facet?(key)
           fc.merge!(build_multi_facet(field))
         elsif named_facet?(key)
-          k = key.gsub(/^facet-/, '')
           fc[k] = facet_term(field)
         elsif multi_stat_facet?(key)
           fc.merge!(multi_stat_facet(field))
         elsif statistical_facet?(key)
-          k = key.gsub(/^stat-/, '')
           fc[k] = stat_facet(field)
         elsif date_facet?(key)
-          k = key.gsub(/^date-/, '')
           fc.merge!(build_date_facet(field, k))
         end
       end
