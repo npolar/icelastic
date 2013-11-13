@@ -1,7 +1,6 @@
 # Icelastic
 
 [![Code Climate](https://codeclimate.com/github/npolar/icelastic.png)](https://codeclimate.com/github/npolar/icelastic)
-TODO: Write a gem description
 
 ## Installation
 
