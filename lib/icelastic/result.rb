@@ -67,19 +67,7 @@ module Icelastic
         fb = response["facets"]
         fb.each do |k,v|
           ["terms", "entries"].each do |type|
-            if v.has_key?(type)
-              wrapper << {
-                k => v[type].map do |e|
-                  term = e["term"] ? e["term"] : handle_facet_time(k, e["time"])
-                  {
-                    :term => term,
-                    :count => e["count"],
-                    :uri => build_facet_uri(k, term)
-                    #:query => build_facet_query(k, term)
-                  }
-                end
-              }
-            end
+            wrapper << { k => map_facet_terms(k, v[type]) } if v.has_key?(type)
           end
         end
         wrapper
@@ -175,6 +163,18 @@ module Icelastic
       end
 
       "#{yyyy_mm_dd_to_iso8601(year, month, day)}..#{yyyy_mm_dd_to_iso8601(date.year, date.month, date.day)}"
+    end
+
+    def map_facet_terms(key, terms)
+      terms.map do |e|
+        term = e["term"] ? e["term"] : handle_facet_time(key, e["time"])
+        {
+          :term => term,
+          :count => e["count"],
+          :uri => build_facet_uri(key, term)
+          #:query => build_facet_query(k, term)
+        }
+      end
     end
 
     # Builds a facet uri using the query builder
