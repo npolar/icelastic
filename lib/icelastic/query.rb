@@ -352,7 +352,7 @@ module Icelastic
     # Build a sort segment
     def build_sort_segment(value)
       value.split(',').map do |v|
-        {v.gsub(/-(.+)/, '\1') => sort_order(v), :ignore_unmapped => true}
+        {v.gsub(/-(.+)/, '\1') => { :order => sort_order(v), :ignore_unmapped => true}}
       end
     end
 

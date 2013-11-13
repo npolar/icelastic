@@ -555,14 +555,16 @@ describe Icelastic::Query do
 
     it "sort ascending on sort=<field>" do
       subject.params = "q=&sort=title"
-      subject.sort.should == {:sort => [{"title" => :asc, :ignore_unmapped => true}]}
+      subject.sort.should == {:sort =>
+        [{"title" => {:order => :asc, :ignore_unmapped => true}}]
+      }
     end
 
     it "sort descending on sort=-<field>" do
       subject.params = "q=&sort=-title"
       subject.sort.should == {
         :sort => [
-          {"title" => :desc, :ignore_unmapped => true}
+          {"title" => {:order => :desc, :ignore_unmapped => true}}
         ]
       }
     end
@@ -571,8 +573,8 @@ describe Icelastic::Query do
       subject.params = "q=&sort=location,-rating"
       subject.sort.should == {
         :sort => [
-          {"location" => :asc, :ignore_unmapped => true},
-          {"rating" => :desc, :ignore_unmapped => true}
+          {"location" => {:order => :asc, :ignore_unmapped => true}},
+          {"rating" => {:order => :desc, :ignore_unmapped => true}}
         ]
       }
     end
@@ -581,8 +583,8 @@ describe Icelastic::Query do
       subject.params = "q=&sort=location&sort=rating"
       subject.sort.should == {
         :sort => [
-          {"location" => :asc, :ignore_unmapped => true},
-          {"rating" => :asc, :ignore_unmapped => true}
+          {"location" => {:order => :asc, :ignore_unmapped => true}},
+          {"rating" => {:order => :asc, :ignore_unmapped => true}}
         ]
       }
     end
