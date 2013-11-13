@@ -18,6 +18,8 @@ And then execute:
 
 ```ruby
 
+    require 'icelastic'
+
     use Rack::Icelastic, {
       :url => "http://localhost:9200",
       :index => "example",
@@ -37,6 +39,8 @@ And then execute:
 ### App
 
 ```ruby
+
+    require 'icelastic'
 
     run Rack::Icelastic.new nil, {
       :url => "http://localhost:9200",
