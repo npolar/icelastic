@@ -1,5 +1,5 @@
 module Icelastic
-  
+
   # This class is used to build elasticsearch queries from url parameters
   #
   # [Usage]
@@ -325,17 +325,12 @@ module Icelastic
       fc = {}
       facet_params.each do |key, field|
         k = key.gsub(/^facet-|^stat-|^date-/, '')
-        if multi_facet?(key)
-          fc.merge!(build_multi_facet(field))
-        elsif named_facet?(key)
-          fc[k] = facet_term(field)
-        elsif multi_stat_facet?(key)
-          fc.merge!(multi_stat_facet(field))
-        elsif statistical_facet?(key)
-          fc[k] = stat_facet(field)
-        elsif date_facet?(key)
-          fc.merge!(build_date_facet(field, k))
-        end
+
+        fc.merge!(build_multi_facet(field)) if multi_facet?(key)
+        fc[k] = facet_term(field) if named_facet?(key)
+        fc.merge!(multi_stat_facet(field)) if multi_stat_facet?(key)
+        fc[k] = stat_facet(field) if statistical_facet?(key)
+        fc.merge!(build_date_facet(field, k)) if date_facet?(key)
       end
       fc
     end
