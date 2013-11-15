@@ -137,7 +137,7 @@ describe Icelastic::Result do
     context "Search" do
 
       it "return qtime and q" do
-        @r.search.should include(:qtime, :q)
+        @r.search.should include(:qtime, "q")
       end
 
       it "return query time" do
@@ -145,7 +145,7 @@ describe Icelastic::Result do
       end
 
       it "return query" do
-        @r.send(:query_param).should == "nesting"
+        @r.send(:query_param).should include("q" => "nesting")
       end
 
     end

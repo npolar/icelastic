@@ -55,8 +55,7 @@ module Icelastic
     def search
       {
         :qtime => query_time,
-        :q => query_param
-      }
+      }.merge(query_param)
     end
 
     # Generates a uniform facet format for both elasticsearch
@@ -250,7 +249,7 @@ module Icelastic
 
     # Return the query parameter
     def query_param
-      request_params['q']
+      request_params.select{|k,v| k =~ /^q(-.+)?/}
     end
 
   end
