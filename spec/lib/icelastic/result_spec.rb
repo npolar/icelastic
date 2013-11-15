@@ -196,6 +196,18 @@ describe Icelastic::Result do
           r.facets.first["topics"][0][:uri].should include("q=&facets=topics&filter-topics=biology")
         end
 
+        it "add filter for custom named facet" do
+          response = {
+            "facets"=>{
+              "custom"=>{"_type"=>"terms","missing"=>29,"total"=>189,
+              "other"=>3,"terms"=>[{"term"=>"test","count"=>10}]}
+            }
+          }
+
+          r = result(http_search("q=&facet-custom=topics"), response)
+          r.facets.first["custom"][0][:uri].should include("q=&facet-custom=topics&filter-topics=test")
+        end
+
         it "have correct uri scheme for SSL" do
           r = result(ssl_search("q=&facets=topics"), @response)
           r.facets.first["topics"][0][:uri].should include("https://example.org/endpoint?q=&facets=topics&filter-topics=test")

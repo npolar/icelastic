@@ -187,7 +187,8 @@ module Icelastic
       if field =~ /^(year|month|day)-(.+)/
         "#{facet_query($2, time_range($1, term))}"
       else
-        "#{facet_query(field, term)}"
+        f = request_params.has_key?("facet-#{field}") ? request_params["facet-#{field}"] : field
+        "#{facet_query(f, term)}"
       end
     end
 
