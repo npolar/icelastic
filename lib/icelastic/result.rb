@@ -194,7 +194,7 @@ module Icelastic
 
     # Returns the base uri for the request
     def base
-      "#{env['rack.url_scheme']}://#{env['HTTP_HOST'] + env['REQUEST_PATH']}"
+      "#{env['rack.url_scheme']}://#{env['HTTP_HOST']}#{env['REQUEST_PATH']}"
     end
 
     # Returns the uri for the current request
