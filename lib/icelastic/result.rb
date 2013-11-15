@@ -75,9 +75,8 @@ module Icelastic
 
     # Object holding response documents
     def entries
-      return response['hits']['hits'].map{|e| e['fields']} if request_params.has_key?('fields')
       response['hits']['hits'].map do |e|
-        b = e.delete('_source')
+        b = request_params.has_key?('fields') ? e['fields'] : e['_source']
         b['highlight'] = e['highlight']['_all'].join('... ') if e['highlight']
         b
       end
