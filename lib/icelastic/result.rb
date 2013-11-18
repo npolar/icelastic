@@ -53,9 +53,7 @@ module Icelastic
 
     # Object containing search stats
     def search
-      {
-        :qtime => query_time,
-      }.merge(query_param)
+      {:qtime => query_time}.merge(query_param)
     end
 
     # Generates a uniform facet format for both elasticsearch
