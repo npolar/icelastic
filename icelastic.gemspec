@@ -26,5 +26,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "simplecov"
 
   spec.add_dependency "rack"
+  spec.add_dependency "yajl-ruby"
   spec.add_dependency "elasticsearch"
 end
