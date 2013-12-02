@@ -62,13 +62,20 @@ module Icelastic
     def result
       self.env = env.merge({"QUERY_STRING" => request_params.map{|k,v| "#{k}=#{v}"}.join('&')})
       r = Icelastic::Result.new(Rack::Request.new(env), response)
-      r.feed.to_json
+      csv = Icelastic::CsvWriter.new(Rack::Request.new(env), r.feed[:feed][:entries])
+      request_params['format'] == "csv" ? csv.build : r.feed.to_json
     end
 
     def request_params
       p = CGI.parse(env['QUERY_STRING'])
       p.each {|k,v| p[k] = v.join(",")}
+      p["limit"] = count if p["limit"] == "all"
       self.params = hash_key_to_s(params.merge(p))
+    end
+
+    def count
+      r = client.count :index => search_index, :type => type
+      r['count']
     end
 
     # Casts hash keys to String
