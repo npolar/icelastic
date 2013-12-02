@@ -193,7 +193,7 @@ describe Icelastic::Result do
 
         it "remove filter when already request url" do
           r = result(http_search("q=&facets=topics&filter-topics=biology,test"), @response)
-          r.facets.first["topics"][0][:uri].should include("q=&facets=topics&filter-topics=biology")
+          r.facets.first["topics"][0][:uri].should == "http://example.org/endpoint?q=&facets=topics&filter-topics=biology"
         end
 
         it "add filter for custom named facet" do
