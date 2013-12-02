@@ -1,10 +1,13 @@
 module Icelastic
   class CsvWriter
 
-    attr_accessor :env, :documents
+    include Icelastic
+
+    attr_accessor :env, :documents, :params
 
     def initialize(request, documents)
       self.env = request.env
+      self.params = request.params
       self.documents = documents
     end
 
@@ -18,20 +21,14 @@ module Icelastic
 
     private
 
-    # HTTP request parameters extracted from the rack env
-    def request_params
-      params = CGI.parse(env['QUERY_STRING'])
-      params.each {|k,v| params[k] = v.join(",")}
-    end
-
     # True if there are user defined fields
     def fields?
-      request_params.any?{|k,v| k == "fields"}
+      params.any?{|k,v| k == "fields"}
     end
 
     # Returns an array with the specified fields
     def fields
-      fields? ? request_params['fields'].split(',') : keys
+      fields? ? params['fields'].split(',') : keys
     end
 
     def keys
