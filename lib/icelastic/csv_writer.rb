@@ -14,7 +14,7 @@ module Icelastic
     def build
       # Build the csv document
       CSV.generate({:col_sep => "\t", :quote_char => "'"}) do |csv|
-        csv << fields
+        csv << fields if fields?
         rows.each {|r| csv << r}
       end
     end
