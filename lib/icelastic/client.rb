@@ -62,8 +62,11 @@ module Icelastic
     def result
       self.env = env.merge({"QUERY_STRING" => request_params.map{|k,v| "#{k}=#{v}"}.join('&')})
       r = Icelastic::Result.new(Rack::Request.new(env), response)
-      csv = Icelastic::CsvWriter.new(Rack::Request.new(env), r.feed[:feed][:entries])
-      request_params['format'] == "csv" ? csv.build : r.feed.to_json
+      request_params['format'] == "csv" ? csv(r).build : r.feed.to_json
+    end
+
+    def csv(result)
+      Icelastic::CsvWriter.new(Rack::Request.new(env), result.feed[:feed][:entries])
     end
 
     def request_params
