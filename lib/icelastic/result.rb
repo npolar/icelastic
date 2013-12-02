@@ -83,8 +83,7 @@ module Icelastic
 
     # Return a parameter hash for the query string
     def request_params
-      params = CGI.parse(env['QUERY_STRING'])
-      params.each {|k,v| params[k] = v.join(",")}
+      Rack::Request.new(env).params
     end
 
     # Returns the total number hits for the query
