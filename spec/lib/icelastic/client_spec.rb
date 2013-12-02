@@ -5,7 +5,7 @@ describe Icelastic::Client do
   def search_request
     Rack::Request.new(
       Rack::MockRequest.env_for(
-        "/", "HTTP_HOST" => "example.org", "REQUEST_PATH" => "", "QUERY_STRING" => "q=bear"
+        "/", "HTTP_HOST" => "example.org", "REQUEST_PATH" => "", "QUERY_STRING" => "q=bear&limit=all"
       )
     )
   end
