@@ -2,10 +2,10 @@ require "spec_helper"
 
 describe Icelastic::Client do
 
-  def search_request
+  def search_request(query)
     Rack::Request.new(
       Rack::MockRequest.env_for(
-        "/", "HTTP_HOST" => "example.org", "REQUEST_PATH" => "", "QUERY_STRING" => "q=bear&limit=all"
+        "/", "HTTP_HOST" => "example.org", "REQUEST_PATH" => "", "QUERY_STRING" => query
       )
     )
   end
@@ -87,7 +87,16 @@ describe Icelastic::Client do
     context "#search" do
 
       it "return a feed response" do
-        JSON.parse(@client.search(search_request)).should include("feed")
+        JSON.parse(@client.search(search_request("q=bear"))).should include("feed")
+      end
+
+      it "return a all documents" do
+        JSON.parse(@client.search(search_request("q=bear&limit=all"))).should include("feed")
+      end
+
+      it "return a csv response" do
+        Icelastic::CsvWriter.any_instance.stub(:build).and_return("csv response")
+        @client.search(search_request("q=bear&format=csv")).should == "csv response"
       end
 
     end
