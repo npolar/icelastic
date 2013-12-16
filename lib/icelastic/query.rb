@@ -136,7 +136,7 @@ module Icelastic
     # Clean the query value and add a trailing wildcard for partial matches
     def query_value
       q = params.select{|k,v| k =~ /^q(-.+)?$/}
-      q = q.values[0].strip.squeeze(" ").gsub(/\!/, '')
+      q = !q.nil? && q.any? ? q.values[0].strip.squeeze(" ").gsub(/\!/, '') : ""
       q == "" ? "*" : "#{q} #{q}*"
     end
 
