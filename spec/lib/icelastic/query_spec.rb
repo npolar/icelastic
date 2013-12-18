@@ -94,6 +94,16 @@ describe Icelastic::Query do
         subject.query_string.should == :field_query
       end
 
+      it "do a wildcard query when no q= is in the query" do
+        subject.params = "?facets=false"
+        subject.query_string.should == {
+        :query_string => {
+          :default_field => :_all,
+          :query => "*"
+        }
+      }
+      end
+
     end
 
     context "#global_query" do
@@ -545,6 +555,20 @@ describe Icelastic::Query do
             }
           }
         }
+      end
+
+    end
+
+    context "Facet Disabling" do
+
+      it "not return facets when ?facets=false" do
+        subject.params = "q=&facets=false"
+        subject.facets.should == { :facets => {} }
+      end
+
+      it "not return date facets when ?facets=false" do
+        subject.params = "q=&facets=false&date-year=created"
+        subject.facets.should == { :facets => {} }
       end
 
     end

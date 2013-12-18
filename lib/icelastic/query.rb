@@ -324,14 +324,16 @@ module Icelastic
     # Handle facet types
     def handle_facets
       fc = {}
-      facet_params.each do |key, field|
-        k = key.gsub(/^facet-|^stat-|^date-/, '')
-
-        fc.merge!(build_multi_facet(field)) if multi_facet?(key)
-        fc[k] = facet_term(field) if named_facet?(key)
-        fc.merge!(multi_stat_facet(field)) if multi_stat_facet?(key)
-        fc[k] = stat_facet(field) if statistical_facet?(key)
-        fc.merge!(build_date_facet(field, k)) if date_facet?(key)
+      unless facet_params['facets'] && facet_params['facets'] == "false"
+        facet_params.each do |key, field|
+          k = key.gsub(/^facet-|^stat-|^date-/, '')
+  
+          fc.merge!(build_multi_facet(field)) if multi_facet?(key)
+          fc[k] = facet_term(field) if named_facet?(key)
+          fc.merge!(multi_stat_facet(field)) if multi_stat_facet?(key)
+          fc[k] = stat_facet(field) if statistical_facet?(key)
+          fc.merge!(build_date_facet(field, k)) if date_facet?(key)
+        end
       end
       fc
     end
