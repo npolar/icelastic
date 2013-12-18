@@ -563,12 +563,12 @@ describe Icelastic::Query do
 
       it "not return facets when ?facets=false" do
         subject.params = "q=&facets=false"
-        subject.facets.should == { :facets => {} }
+        subject.facets.should == nil
       end
 
       it "not return date facets when ?facets=false" do
         subject.params = "q=&facets=false&date-year=created"
-        subject.facets.should == { :facets => {} }
+        subject.facets.should == nil
       end
 
     end

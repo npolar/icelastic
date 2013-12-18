@@ -36,7 +36,7 @@ module Icelastic
       query.merge!(fields) unless fields.nil?
       query.merge!(highlight)
       query.merge!(query_block)
-      query.merge!(facets) if facets[:facets].any?
+      query.merge!(facets) unless facets.nil?
 
       query.to_json
     end
@@ -100,7 +100,7 @@ module Icelastic
     # Builds a facets segment
     # @see http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/search-facets.html Elasticsearch: facets
     def facets
-      {:facets => handle_facets}
+      {:facets => handle_facets} if facets_enabled?
     end
 
     # Generate a sort segment
@@ -248,6 +248,11 @@ module Icelastic
       params.select{|k,v| k=~ /^facets$|^facet-(.+)$|^stat-(.+)$|^stats$|^date-(year|month|day)$/}
     end
 
+    # Check if the disable directive is given
+    def facets_enabled?
+      facet_params['facets'] && facet_params['facets'] == "false" ? false : true
+    end
+
     def facet_size
       params['size-facet'] ? params['size-facet'].to_i : 10
     end
@@ -324,17 +329,17 @@ module Icelastic
     # Handle facet types
     def handle_facets
       fc = {}
-      unless facet_params['facets'] && facet_params['facets'] == "false"
-        facet_params.each do |key, field|
-          k = key.gsub(/^facet-|^stat-|^date-/, '')
-  
-          fc.merge!(build_multi_facet(field)) if multi_facet?(key)
-          fc[k] = facet_term(field) if named_facet?(key)
-          fc.merge!(multi_stat_facet(field)) if multi_stat_facet?(key)
-          fc[k] = stat_facet(field) if statistical_facet?(key)
-          fc.merge!(build_date_facet(field, k)) if date_facet?(key)
-        end
+
+      facet_params.each do |key, field|
+        k = key.gsub(/^facet-|^stat-|^date-/, '')
+
+        fc.merge!(build_multi_facet(field)) if multi_facet?(key)
+        fc[k] = facet_term(field) if named_facet?(key)
+        fc.merge!(multi_stat_facet(field)) if multi_stat_facet?(key)
+        fc[k] = stat_facet(field) if statistical_facet?(key)
+        fc.merge!(build_date_facet(field, k)) if date_facet?(key)
       end
+
       fc
     end
 
