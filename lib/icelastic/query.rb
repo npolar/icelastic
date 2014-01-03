@@ -225,12 +225,17 @@ module Icelastic
 
       # Swap values if val2 is smaller than val1
       if date_time?(v[0]) || date_time?(v[1])
-        v[0], v[1] = v[1], v[0] if date_time_to_i(v[1]) < date_time_to_i(v[0])
+        swap_values(v) if date_time_to_i(v[1]) < date_time_to_i(v[0])
       else
-        v[0], v[1] = v[1], v[0] if v[1].to_f < v[0].to_f
+        swap_values(v) if v[1].to_f < v[0].to_f
       end
 
       {:range => {key => {:gte => v[0], :lte => v[1]}}}
+    end
+
+    # Swap two values in a [0,1] array
+    def swap_values(values)
+      values[0], values[1] = values[1], values[0]
     end
 
     # Check if receiving a date time string
