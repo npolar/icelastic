@@ -136,8 +136,13 @@ module Icelastic
     # Clean the query value and add a trailing wildcard for partial matches
     def query_value
       q = params.select{|k,v| k =~ /^q(-.+)?$/}
-      q = !q.nil? && q.any? ? q.values[0].strip.squeeze(" ").gsub(/\!/, '') : ""
-      q == "" ? "*" : "#{q} #{q}*"
+      q = !q.nil? && q.any? ? q.values[0].strip.squeeze(" ").gsub(/(\&|\||\!|\(|\)|\{|\}|\[|\]|\^|\~|\:|\!)/, "") : ""
+      q == "" ? "*" : handle_quoted_search(q)
+    end
+
+    # Detect has executed an explicit query. if not format a simple fuzzy search
+    def handle_quoted_search(q)
+      q.match(/^\"(.+)\"$/) ? q.gsub(/\"/, "") : "#{q} #{q}*"
     end
 
     # Generates a default_field || fields syntax for the query string.
