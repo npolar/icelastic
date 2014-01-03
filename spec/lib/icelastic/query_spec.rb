@@ -118,6 +118,26 @@ describe Icelastic::Query do
         }
       end
 
+      it "handle as semi fuzzy q=inter" do
+        subject.params = "q=inter"
+        subject.global_query.should == {
+          :query_string => {
+            :default_field => :_all,
+            :query => "inter inter*"
+          }
+        }
+      end
+
+      it "handle q=\"explicit qeury\"" do
+        subject.params = "q=\"explicit query\""
+        subject.global_query.should == {
+          :query_string => {
+            :default_field => :_all,
+            :query => "explicit query"
+          }
+        }
+      end
+
       it "ignore ! characters in q=" do
         subject.params = "q=BOO!"
         subject.global_query.should == {
