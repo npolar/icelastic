@@ -60,16 +60,17 @@ And then execute:
 
 ## URL query parameter overview
 
+### Simple Queries
+
 ```ruby
-
-  ## Query ##
-
   "?q=<value>" # Regular query
   "?q-<field>=<value>" # Field query
   "?q-<field1>,<field2>=<value>" # Multi-field query
+```
 
-  ## Paging ##
+### Paging & Fields
 
+```ruby
   "?start=10" # Results are shown from the 10th row
   "?limit=50" # Show 50 rows per result page
   "?limit=all" # Use the all keyword to retrieve all search results (Very heavy and slow on large collections. Use with care!!!)
@@ -78,9 +79,11 @@ And then execute:
   "?sort=-<field>" # Sort descending on field
 
   "?fields=<field1>,<field2>,<field3>" # Only show fields 1,2,3 in the response rows
+```
 
-  ## Filtered queries ##
+### Filtered Queries
 
+```ruby
   "?filter-<field>=<value>" # Basic filter
 
   "?filter-<field>=<value1>,<value2>" # AND filter
@@ -90,21 +93,24 @@ And then execute:
   "?filter-<field>=<value1>..<value2>" # Ranged filter
   "?filter-<field>=<value>.." # Ranged filter (greater or equal then)
   "?filter-<field>=..<value>" # Ranged filter (less or equal then)
+```
 
-  ## Facets ##
+### Facets
 
+```ruby
   "?facets=<field1>,<field2>" # Facet on field1 and field2
   "?facet-<name>=<field>" # Labeled facet (generates a facet with a specific name)
 
   "?date-<interval>=<field1>,<field2>" # Generate a date facets with the specified interval (year|month|day)
 
   "?size-facet=<number>" # Specify the number of facets to return
+```
 
-  ## Format ##
+### Output Format
 
+```ruby
   "?format=csv" # Return results as csv (Only basic support)
   "?format=csv&fields=<field1>" # For the best results with csv specify the fields you want in the results
-
 ```
 
 ## Contributing
