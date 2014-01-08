@@ -68,7 +68,7 @@ And then execute:
   "?q-<field1>,<field2>=<value>" # Multi-field query
 ```
 
-### Paging & Fields
+#### Paging & Fields
 
 ```ruby
   "?start=10" # Results are shown from the 10th row
@@ -81,7 +81,7 @@ And then execute:
   "?fields=<field1>,<field2>,<field3>" # Only show fields 1,2,3 in the response rows
 ```
 
-### Filtered Queries
+#### Filtered Queries
 
 ```ruby
   "?filter-<field>=<value>" # Basic filter
@@ -95,7 +95,7 @@ And then execute:
   "?filter-<field>=..<value>" # Ranged filter (less or equal then)
 ```
 
-### Facets
+#### Facets
 
 ```ruby
   "?facets=<field1>,<field2>" # Facet on field1 and field2
@@ -106,7 +106,7 @@ And then execute:
   "?size-facet=<number>" # Specify the number of facets to return
 ```
 
-### Output Format
+#### Output Format
 
 ```ruby
   "?format=csv" # Return results as csv (Only basic support)
