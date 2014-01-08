@@ -60,7 +60,7 @@ And then execute:
 
 ## URL query parameter overview
 
-### Simple Queries
+#### Simple Queries
 
 ```ruby
   "?q=<value>" # Regular query
