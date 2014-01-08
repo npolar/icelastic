@@ -98,6 +98,8 @@ And then execute:
 
   "?date-<interval>=<field1>,<field2>" # Generate a date facets with the specified interval (year|month|day)
 
+  "?size-facet=<number>" # Specify the number of facets to return
+
   ## Format ##
 
   "?format=csv" # Return results as csv (Only basic support)
