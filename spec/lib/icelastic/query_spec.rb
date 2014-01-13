@@ -182,6 +182,16 @@ describe Icelastic::Query do
         }
       end
 
+      it "?q=<value> when recieving ?q-=<value>" do
+        subject.params = "q-=search"
+        subject.query_string.should == {
+          :query_string => {
+            :default_field => :_all,
+            :query => "search search*"
+          }
+        }
+      end
+
       it "handle q-<field1>,<field2>=<value>" do
         subject.params = "q-title,summary=search"
         subject.field_query.should == {
