@@ -14,12 +14,22 @@ module Icelastic
     def build
       # Build the csv document
       CSV.generate({:col_sep => "\t", :quote_char => "'"}) do |csv|
-        csv << fields if fields?
+        csv << header
         rows.each {|r| csv << r}
       end
     end
 
     private
+
+    def header
+      fields? ? fields : doc_headers
+    end
+
+    def doc_headers
+      h = []
+      documents.each {|doc| h.concat(doc.keys).uniq!}
+      h
+    end
 
     # True if there are user defined fields
     def fields?
@@ -50,7 +60,7 @@ module Icelastic
 
     def handle_element(element)
       case element
-      when Hash then handle_hash(element).to_json.gsub(/\\/,"") 
+      when Hash then handle_hash(element).to_json.gsub(/\\/,"")
       when Array then handle_array(element).join("|")
       else element
       end

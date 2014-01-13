@@ -68,6 +68,12 @@ describe Icelastic::CsvWriter do
       )
     end
 
+    it "return top lvl header when fields=nil" do
+      writer("q=").build.should include(
+        "measurement\tlabel\tsarray\tnarray\tobject\taarray\toarray\tnested\n"
+      )
+    end
+
     it "when fields generate header" do
       writer.build.should include("measurement\tlabel\tsarray\n")
     end
