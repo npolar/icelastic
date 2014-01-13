@@ -57,7 +57,7 @@ module Icelastic
     # @see #field_query
     # @see http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html#query-dsl-query-string-query Elasticsearch: Query string query
     def query_string
-      params.any?{|k,v| k =~ /^q-/} ? field_query : global_query
+      params.any?{|k,v| k =~ /^q-(.+)$/} ? field_query : global_query
     end
 
     # Build a query against all fields
@@ -135,7 +135,7 @@ module Icelastic
 
     # Clean the query value
     def query_value
-      q = params.select{|k,v| k =~ /^q(-.+)?$/}
+      q = params.select{|k,v| k =~ /^q(-(.+)?)?$/}
       q = !q.nil? && q.any? ? q.values[0].strip.squeeze(" ").gsub(/(\&|\||\!|\(|\)|\{|\}|\[|\]|\^|\~|\:|\!)/, "") : ""
       q == "" ? "*" : handle_search_pattern(q)
     end
