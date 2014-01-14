@@ -38,13 +38,7 @@ module Icelastic
 
     # Returns an array with the specified fields
     def fields
-      fields? ? params['fields'].split(',') : keys
-    end
-
-    def keys
-      k = []
-      documents.each {|doc| k.concat(doc.keys)}
-      k.uniq!
+      params['fields'].split(',')
     end
 
     # Returns an array of arrays containing the column elements
@@ -52,7 +46,7 @@ module Icelastic
       docs = []
       documents.each do |doc|
         row = []
-        fields.each_with_index {|field, i| row[i] = doc[field] ? handle_element(doc[field]) : "null"}
+        header.each_with_index {|field, i| row[i] = doc[field] ? handle_element(doc[field]) : "null"}
         docs << row
       end
       docs
