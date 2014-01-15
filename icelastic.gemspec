@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["data@npolar.no"]
   spec.description   = "Library that provides advanced elasticsearch query functionality in the url."
   spec.summary       = "Exposes elasticsearch on the url using a Rack middleware for easy injection in server stack."
-  spec.homepage      = ""
+  spec.homepage      = "https://github.com/npolar/icelastic"
   spec.license       = "GPLv3"
 
   spec.files         = `git ls-files`.split($/)
