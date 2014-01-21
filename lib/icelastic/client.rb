@@ -29,7 +29,7 @@ module Icelastic
       self.type = config[:type] if config.has_key?(:type)
       self.log = config.has_key?(:log) ? config[:log] : false
       self.client = url.nil? ? Elasticsearch::Client.new : Elasticsearch::Client.new(:url => url, :log => log)
-      self.params = config.has_key?(:params) ? PARAMS.merge(config[:params]) : PARAMS
+      self.params = config.has_key?(:params) && !config[:params].nil? ? PARAMS.merge(config[:params]) : PARAMS
     end
 
     # Execute a search operation
