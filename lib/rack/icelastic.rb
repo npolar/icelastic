@@ -8,10 +8,9 @@ module Rack
 
   class Icelastic
 
-    attr_accessor :env
+    attr_accessor :env, :params
 
     def initialize(app=nil, options={})
-
       app = lambda{|env| [200, {"Content-Type" => "application/json"}, [{"error" => "404 Not Found"}.to_json]]} if app.nil?
 
       @app, @config = app, options
@@ -19,7 +18,7 @@ module Rack
 
     def call(env)
       self.env = env
-
+      self.params = CGI.parse(env['QUERY_STRING'])
       # Execute a search and return the response if a search request
       return [200, {"Content-Type" => "application/json; charset=utf-8"}, [client.search(request)]] if search?
 
@@ -38,7 +37,15 @@ module Rack
 
     # Determine if this is a search request
     def search?
-      env['REQUEST_METHOD'] == "GET" and not env['QUERY_STRING'].empty?
+      env['REQUEST_METHOD'] == "GET" && (query? || filter?)
+    end
+
+    def query?
+      params.keys.select{|param| param[/q(-*)?/]}.any?
+    end
+
+    def filter?
+      params.keys.select{|param| param[/filter-.+|not-.+/]}.any?
     end
 
   end
