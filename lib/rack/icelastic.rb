@@ -41,7 +41,7 @@ module Rack
     end
 
     def query?
-      params.keys.select{|param| param[/q(-*)?/]}.any?
+      params.keys.select{|param| param[/q(-.+)?/]}.any?
     end
 
     def filter?
