@@ -39,18 +39,6 @@ module Icelastic
       result
     end
 
-    # Index or update a single document
-    def index(request)
-      body = JSON.parse(request.env['rack.input'].read)
-      client.index :index => search_index, :type => type, :id => body["id"], :body => body
-    end
-
-    # Execute bulk index and update operations
-    def bulk(request)
-      body = JSON.parse(request.env['rack.input'].read)
-      client.bulk :body => bulk_operations(body)
-    end
-
     private
 
     def query
@@ -84,20 +72,6 @@ module Icelastic
     # Casts hash keys to String
     def hash_key_to_s(hash)
       hash.inject({}){|memo,(k,v)| memo[k.to_s] = v; memo}
-    end
-
-    # Generate an array of bulk operations for an array of documents
-    def bulk_operations(body)
-      body.map! do |e|
-        {
-          :index => {
-            :_index => search_index,
-            :_type => type,
-            :_id => e["id"],
-            :data => e
-          }
-        }
-      end
     end
 
   end

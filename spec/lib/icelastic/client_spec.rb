@@ -101,26 +101,6 @@ describe Icelastic::Client do
 
     end
 
-    context "#index" do
-
-      it "add document" do
-        @client.index(index_request).should include("ok" => true)
-      end
-
-      it "update document" do
-        @client.index(update_request).should include("ok" => true)
-      end
-
-    end
-
-    context "#bulk" do
-
-      it "index multiple items" do
-        @client.bulk(bulk_request)["items"][0]["index"].should include("ok" => true)
-      end
-
-    end
-
   end
 
 end
