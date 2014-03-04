@@ -301,28 +301,28 @@ describe Icelastic::Query do
       context "Range filter" do
 
         it "handle filter-<field>=<value1>..<value2>" do
-          subject.params="q=&filter-test=val1..val2"
+          subject.params="q=&filter-test=1..10"
           subject.filter.should == {
             :and => [
-              {:range => {"test" => {:gte => "val1", :lte => "val2"}}}
+              {:range => {"test" => {:gte => "1", :lte => "10"}}}
             ]
           }
         end
 
         it "handle filter-<field>=<value1>.." do
-          subject.params="q=&filter-test=val.."
+          subject.params="q=&filter-test=5.."
           subject.filter.should == {
             :and => [
-              {:range => {"test" => {:gte => "val"}}}
+              {:range => {"test" => {:gte => "5"}}}
             ]
           }
         end
 
         it "handle filter-<field>=..<value2>" do
-          subject.params="q=&filter-test=..val"
+          subject.params="q=&filter-test=..5"
           subject.filter.should == {
             :and => [
-              {:range => {"test" => {:lte => "val"}}}
+              {:range => {"test" => {:lte => "5"}}}
             ]
           }
         end

@@ -224,16 +224,26 @@ module Icelastic
       return {:range => {key => {:gte => v[0]}}} if v[1].nil?
 
       # Swap values if val2 is smaller than val1
-      if date_time?(v[0]) || date_time?(v[1])
-        swap_values(v) if date_time_to_i(v[1]) < date_time_to_i(v[0])
-      else
-        swap_values(v) if v[1].to_f < v[0].to_f
-      end
+      swap_values(v) unless correct_order?(v)
 
       {:range => {key => {:gte => v[0], :lte => v[1]}}}
     end
 
-    # Swap two values in a [0,1] array
+    # Check if the values are in the right order
+    def correct_order?(v)
+      if date_time?(v[0]) || date_time?(v[1])
+        correct_date_order?(v)
+      else
+        v[0].to_f < v[1].to_f
+      end
+    end
+
+    # Check if the dates are in the right order
+    def correct_date_order?(v)
+      date_time_to_i(v[0]) < date_time_to_i(v[1])
+    end
+
+    # Swap two values in an array
     def swap_values(values)
       values[0], values[1] = values[1], values[0]
     end
