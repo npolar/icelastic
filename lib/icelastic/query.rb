@@ -123,7 +123,7 @@ module Icelastic
 
     # Define the fields that should be included in the response
     def fields
-      {:fields => params["fields"].split(",")} if params.has_key?("fields")
+      {:fields => params["fields"].split(",").uniq} if params.has_key?("fields")
     end
 
     # Build highlighter segment

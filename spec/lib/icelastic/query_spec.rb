@@ -677,6 +677,11 @@ describe Icelastic::Query do
       subject.fields.should == {:fields => ["title","summary"]}
     end
 
+    it "not allow fields=<field1>,<field1>" do
+      subject.params = "q=&fields=title,title"
+      subject.fields.should == {:fields => ["title"]}
+    end
+
   end
 
   context "Features" do
