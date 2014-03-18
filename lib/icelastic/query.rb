@@ -87,14 +87,7 @@ module Icelastic
     # @see http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-query-filter.html Elasticsearch: Query filters
     # @see http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-and-filter.html Elasticsearch: And filters
     def filter
-      f = {:and => []}
-      filter_params.each do |k,v|
-        key = k.gsub(/^filter-|^not-/, '')
-        parse_filter_values(key, v).each do |e|
-          not_filter?(k) ? f[:and] << {:not => e} : f[:and] << e
-        end
-      end
-      f
+      Icelastic::QueryBuilder::Filter.new(params).build
     end
 
     # Builds a facets segment
@@ -168,99 +161,6 @@ module Icelastic
     # Returns true if there are filter parameters
     def filters?
       filter_params.any?
-    end
-
-    # Return true if this is an exclusion filter? (NOT)
-    def not_filter?(key)
-      key.match(/^not-(.+)/)
-    end
-
-    # Split filter values into segments and handle them appropriatly
-    def parse_filter_values(key,  value)
-      vals = value.split(',').map{|v| handle_filter_value(key, v)}
-    end
-
-    # Build filter syntax based on the value format
-    def handle_filter_value(key, value)
-      if or_value?( value )
-        or_filter( key, value )
-      elsif range_value?( value )
-        range_filter( key, value )
-      else
-        filter_term( key, value )
-      end
-    end
-
-    # Check if the value holds an or construct
-    # @example
-    #   <val1>|<val2>
-    def or_value?(value)
-      value.match(/(.+)\|(.+)/)
-    end
-
-    # Build or filter syntax
-    # @see http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-or-filter.html Elasticsearch: or filter
-    def or_filter(key, value)
-      of = {:or => []}
-      value.split('|').each {|v| of[:or] << handle_filter_value( key, v )}
-      of
-    end
-
-    # Check if the value matches a range format
-    # @example
-    #   <val1>..<val2> (from val1 to val2)
-    #   <val1>.. (larger or equal to val1)
-    #   ..<val2> (less or equal to val2)
-    def range_value?(value)
-      value.match(/(.+)\.\.(.+)|^\.\.(.+)|^(.+)\.\./)
-    end
-
-    # Build a range filter
-    # @see http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-range-filter.html Elasticsearch: range filter
-    def range_filter(key, value)
-      v = value.split('..')
-
-      return {:range => {key => {:lte => v[1]}}} if v[0].empty?
-      return {:range => {key => {:gte => v[0]}}} if v[1].nil?
-
-      # Swap values if val2 is smaller than val1
-      swap_values(v) unless correct_order?(v)
-
-      {:range => {key => {:gte => v[0], :lte => v[1]}}}
-    end
-
-    # Check if the values are in the right order
-    def correct_order?(v)
-      if date_time?(v[0]) || date_time?(v[1])
-        correct_date_order?(v)
-      else
-        v[0].to_f < v[1].to_f
-      end
-    end
-
-    # Check if the dates are in the right order
-    def correct_date_order?(v)
-      date_time_to_i(v[0]) < date_time_to_i(v[1])
-    end
-
-    # Swap two values in an array
-    def swap_values(values)
-      values[0], values[1] = values[1], values[0]
-    end
-
-    # Check if receiving a date time string
-    def date_time?(value)
-      value.match(/^\d{4}\-(\d{2})?\-?(\d{2})?T?(\d{2}):?(\d{2})?:?(\d{2})?Z?/)
-    end
-
-    # Remove string characters from date and cast to integer
-    def date_time_to_i(value)
-      value.gsub(/-|:|T|Z/, '').to_i
-    end
-
-    # Returns a filter term hash
-    def filter_term(field, value)
-      {:term =>{field => value.strip.squeeze(" ")}}
     end
 
     # Return a hash with facet parameters
