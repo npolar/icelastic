@@ -93,7 +93,7 @@ module Icelastic
     # Builds a facets segment
     # @see http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/search-facets.html Elasticsearch: facets
     def facets
-      {:facets => handle_facets} if facets_enabled?
+      Icelastic::QueryBuilder::Aggregation.new(params).build
     end
 
     # Generate a sort segment
@@ -161,106 +161,6 @@ module Icelastic
     # Returns true if there are filter parameters
     def filters?
       filter_params.any?
-    end
-
-    # Return a hash with facet parameters
-    def facet_params
-      params.select{|k,v| k=~ /^facets$|^facet-(.+)$|^stat-(.+)$|^stats$|^date-(year|month|day)$/}
-    end
-
-    # Check if the disable directive is given
-    def facets_enabled?
-      facet_params['facets'] && facet_params['facets'] == "false" ? false : true
-    end
-
-    def facet_size
-      params['size-facet'] ? params['size-facet'].to_i : 10
-    end
-
-    # Return a term facet segment
-    def facet_term(field)
-      {:terms => {:field => field,:size => facet_size}}
-    end
-
-    # Check if the facet is a multi_facet
-    # @example
-    #   &facets=topic,tags,area
-    def multi_facet?(key)
-      key.match(/^facets$/)
-    end
-
-    # Build facet segments using the field name as the facet name
-    def build_multi_facet(value)
-      mf = {}
-      value.split(',').each{|field| mf[field] = facet_term(field)}
-      mf
-    end
-
-    # Check if the facet is a named facet
-    # @example
-    #   &facet-<title>=<field>
-    def named_facet?(key)
-      key.match(/^facet-(.+)$/)
-    end
-
-    # Check if a statistical facet was entered
-    # @example
-    #   &stat-<title>=<field>
-    def statistical_facet?(key)
-      key.match(/^stat-(.+)$/)
-    end
-
-    # Build the core statistical facet structure
-    def stat_facet(field)
-      {:statistical => {:field => field}}
-    end
-
-    # Check if there is multi stat facet
-    # @example
-    #   &stats=<field1>,<field2>
-    def multi_stat_facet?(key)
-      key.match(/^stats$/)
-    end
-
-    # Build statistical facets for multiple fields.
-    # Uses the field name + _stat as the key.
-    def multi_stat_facet(value)
-      sf = {}
-      value.split(',').each {|field| sf["#{field}-statistics"] = stat_facet(field)}
-      sf
-    end
-
-    # Check if there is a date facet
-    def date_facet?(key)
-      key.match(/^date-(year|month|day)$/)
-    end
-
-    def date_facet(field, interval)
-      {:date_histogram => {:field => field, :interval => interval}}
-    end
-
-    # Build a date facet
-    def build_date_facet(field, interval)
-      df = {}
-      field.split(',').each {|f| df["#{interval}-#{f}"] = date_facet(f, interval) }
-      df
-    end
-
-    # Handle facet types
-    def handle_facets
-      fc = {}
-
-      facet_params.each do |key, field|
-        k = key.gsub(/^facet-|^stat-|^date-/, '')
-
-        fc.merge!(build_multi_facet(field)) if multi_facet?(key)
-        fc[k] = facet_term(field) if named_facet?(key)
-        fc.merge!(multi_stat_facet(field)) if multi_stat_facet?(key)
-        fc[k] = stat_facet(field) if statistical_facet?(key)
-        fc.merge!(build_date_facet(field, k)) if date_facet?(key)
-      end
-
-      fc
     end
 
     # Sort params
