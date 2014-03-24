@@ -30,10 +30,7 @@ module Icelastic
     # into a full query body.
     def build
       query = {}
-      query.merge!(start)
-      query.merge!(limit)
-      query.merge!(sort)
-      query.merge!(fields) unless fields.nil?
+      query.merge!(paging)
       query.merge!(highlight)
       query.merge!(query_block)
       query.merge!(facets) unless facets.nil?
@@ -96,27 +93,9 @@ module Icelastic
       Icelastic::QueryBuilder::Aggregation.new(params).build
     end
 
-    # Generate a sort segment
-    # @see http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/search-request-sort.html Elasticsearch: Sort
-    def sort
-      sp = {}
-      sort_params.each{|k,v| sp[:sort] = build_sort_segment(v)}
-      sp
-    end
-
-    # Define start point for the result cursor
-    def start
-      start_param? ? {:from => start_param["start"].to_i} : {:from => 0}
-    end
-
-    # Define the item limit per result page
-    def limit
-      limit_param? ? {:size => limit_param["limit"].to_i} : {:size => 25}
-    end
-
-    # Define the fields that should be included in the response
-    def fields
-      {:fields => params["fields"].split(",").uniq} if params.has_key?("fields")
+    # Build paging info
+    def paging
+      Icelastic::QueryBuilder::Paging.new(params).build
     end
 
     # Build highlighter segment
@@ -161,46 +140,6 @@ module Icelastic
     # Returns true if there are filter parameters
     def filters?
       filter_params.any?
-    end
-
-    # Sort params
-    def sort_params
-      params.select{|k,v| k == "sort"}
-    end
-
-    # Determine the sort order from the value
-    # @example
-    #   sort=title # will sort  ascending
-    #   sort=-title # will sort descending because of the "-" character in front of the field
-    def sort_order(value)
-      value =~ /-(.+)/ ? :desc : :asc
-    end
-
-    # Build a sort segment
-    def build_sort_segment(value)
-      value.split(',').map do |v|
-        {v.gsub(/-(.+)/, '\1') => { :order => sort_order(v), :ignore_unmapped => true}}
-      end
-    end
-
-    # Get the start parameter
-    def start_param
-      params.select{|k,v| k == "start"}
-    end
-
-    # Returns true if there is a start param
-    def start_param?
-      start_param.any?
-    end
-
-    # Get the limit parameter
-    def limit_param
-      params.select{|k,v| k == "limit"}
-    end
-
-    # Returns true if there is a limit param
-    def limit_param?
-      limit_param.any?
     end
 
     # Default highlighting configuration
