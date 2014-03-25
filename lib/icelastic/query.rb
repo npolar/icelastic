@@ -84,18 +84,18 @@ module Icelastic
     # @see http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-query-filter.html Elasticsearch: Query filters
     # @see http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-and-filter.html Elasticsearch: And filters
     def filter
-      Icelastic::QueryBuilder::Filter.new(params).build
+      Icelastic::QuerySegment::Filter.new(params).build
     end
 
     # Builds a facets segment
     # @see http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/search-facets.html Elasticsearch: facets
     def facets
-      Icelastic::QueryBuilder::Aggregation.new(params).build
+      Icelastic::QuerySegment::Aggregation.new(params).build
     end
 
     # Build paging info
     def paging
-      Icelastic::QueryBuilder::Paging.new(params).build
+      Icelastic::QuerySegment::Paging.new(params).build
     end
 
     # Build highlighter segment
