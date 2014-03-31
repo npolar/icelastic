@@ -15,13 +15,10 @@ module Icelastic
       SORT_REGEX = /sort/i
       FIELDS_REGEX = /fields/i
 
-      DEFAULT_START = 0
-      DEFAULT_LIMIT = 20
-
       attr_accessor :params
 
       def initialize(params)
-        self.params = params
+        self.params = Icelastic::Default.params.merge(params)
       end
 
       def build
@@ -40,16 +37,15 @@ module Icelastic
       end
 
       def start_term
-        extract_params(START_REGEX).any? ? extract_params(START_REGEX).first[1].to_i : DEFAULT_START
+        params["start"].to_i if extract_params(START_REGEX).any?
       end
 
       def limit_term
-        extract_params(LIMIT_REGEX).any? ? extract_params(LIMIT_REGEX).first[1].to_i : DEFAULT_LIMIT
+        params["limit"].to_i if extract_params(LIMIT_REGEX).any?
       end
 
       def sort_term
-        value = extract_params(SORT_REGEX)["sort"]
-        value.split(",").map do |v|
+        params["sort"].split(",").map do |v|
           order, term = v =~ /-(.+)/ ? [:desc, $1] : [:asc, v]
           {term => {:order => order, :ignore_unmapped => true, :mode => :avg}}
         end
