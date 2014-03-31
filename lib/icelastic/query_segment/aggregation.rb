@@ -8,20 +8,17 @@ module Icelastic
 
     class Aggregation
 
-      TERM_REGEX = /facets|aggregations/i
-      LABELED_REGEX = /^(?:facet-|aggregation-)(.+)$/i
-      HISTOGRAM_REGEX = /^aggregation\[(\d+)\]$/i
+      TERM_REGEX = /facets/i
+      LABELED_REGEX = /^(?:facet-)(.+)$/i
+      HISTOGRAM_REGEX = /^facet\[(\d+)\]$/i
       DATE_REGEX = /^date-(.+)$/i
-      DATE_STAT_REGEX = /^dateStat-(.+)$/i
       STAT_VAL_REGEX = /^(.+)\[(.+)\]$/
-      SIZE_REGEX = /^size-(?:aggregation|facet)$/i
-
-      DEFAULT_SIZE = 20 # default number of results/buckets to return
+      SIZE_REGEX = /^size-(?:facet)$/i
 
       attr_accessor :params
 
       def initialize( params = {} )
-        self.params = params
+        self.params = Icelastic::Default.params.merge(params)
       end
 
       def build
@@ -31,7 +28,6 @@ module Icelastic
           aggs[:aggregations].merge!(labeled_aggregations) if extract_params(LABELED_REGEX)
           aggs[:aggregations].merge!(histogram_aggregations) if extract_params(HISTOGRAM_REGEX)
           aggs[:aggregations].merge!(date_aggregations) if extract_params(DATE_REGEX)
-          aggs[:aggregations].merge!(date_stat_aggregations) if extract_params(DATE_STAT_REGEX)
           aggs
         end
       end
@@ -39,7 +35,7 @@ module Icelastic
       private
 
       def aggregation_size
-        extract_params(SIZE_REGEX).any? ? extract_params(SIZE_REGEX).values.first.to_i : DEFAULT_SIZE
+         extract_params(SIZE_REGEX).values.first.to_i  if extract_params(SIZE_REGEX).any?
       end
 
       def enabled?
@@ -94,42 +90,27 @@ module Icelastic
         extract_params(DATE_REGEX).each do |k,v|
           interval = extract_argument(k, DATE_REGEX)
           format = get_format(interval)
-          v.split(",").each do |e|
-            aggregations.merge!({
-              "#{interval}-#{e}" => {:date_histogram => {
-                :field => e, :interval => interval, :format => format
-              }}
-            })
-          end
-        end
-
-        aggregations
-      end
-
-      def date_stat_aggregations
-        aggregations = {}
-        extract_params(DATE_STAT_REGEX).each do |k,v|
-          interval = extract_argument(k, DATE_STAT_REGEX)
-          format = get_format(interval)
 
           v.split(",").each do |e|
+            bucket = e
+
             if e =~ STAT_VAL_REGEX
               bucket = $1
-              fields = $2.split("|")
+              aggs = {}
+              $2.split("|").each do |field|
+                aggs.merge!({ field => {:extended_stats => {:field => field}}})
+              end
             end
 
             label = "#{interval}-#{bucket}"
 
             aggregation = {
               label => {
-                :date_histogram => {:field => bucket, :interval => interval, :format => format},
-                :aggs => {}
+                :date_histogram => {:field => bucket, :interval => interval, :format => format}
               }
             }
 
-            fields.each do |field|
-              aggregation[label][:aggs].merge!({ "#{field}-stats" => {:extended_stats => {:field => field}}})
-            end
+            aggregation[label][:aggs] = aggs if aggs && aggs.any?
 
             aggregations.merge!(aggregation)
           end
