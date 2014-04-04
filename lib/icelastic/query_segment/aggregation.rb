@@ -10,7 +10,6 @@ module Icelastic
 
       TERM_REGEX = /facets/i
       LABELED_REGEX = /^(?:facet-)(.+)$/i
-      HISTOGRAM_REGEX = /^facet\[(\d+)\]$/i
       DATE_REGEX = /^date-(.+)$/i
       STAT_VAL_REGEX = /^(.+)\[(.+)\]$/
       SIZE_REGEX = /^size-(?:facet)$/i
@@ -23,11 +22,10 @@ module Icelastic
 
       def build
         if enabled?
-          aggs = {:aggregations => {}}
-          aggs[:aggregations].merge!(term_aggregations)  if extract_params(TERM_REGEX)
-          aggs[:aggregations].merge!(labeled_aggregations) if extract_params(LABELED_REGEX)
-          aggs[:aggregations].merge!(histogram_aggregations) if extract_params(HISTOGRAM_REGEX)
-          aggs[:aggregations].merge!(date_aggregations) if extract_params(DATE_REGEX)
+          aggs = {"aggregations" => {}}
+          aggs["aggregations"].merge!(term_aggregations)  if extract_params(TERM_REGEX)
+          aggs["aggregations"].merge!(labeled_aggregations) if extract_params(LABELED_REGEX)
+          aggs["aggregations"].merge!(date_aggregations) if extract_params(DATE_REGEX)
           aggs
         end
       end
@@ -54,7 +52,7 @@ module Icelastic
         aggregations = {}
         extract_params(TERM_REGEX).each do |k,v|
           v.split(",").each do |e|
-            aggregations.merge!( {e => {:terms => {:field => e, :size => aggregation_size}}} )
+            aggregations.merge!( {e => {"terms" => {"field" => e, "size" => aggregation_size}}} )
           end
         end
 
@@ -66,20 +64,9 @@ module Icelastic
         extract_params(LABELED_REGEX).each do |k,v|
           aggregations.merge!({
             extract_argument(k, LABELED_REGEX) => {
-              :terms => {:field => v, :size => aggregation_size}
+              "terms" => {"field" => v, "size" => aggregation_size}
             }
           })
-        end
-
-        aggregations
-      end
-
-      def histogram_aggregations
-        aggregations = {}
-        extract_params(HISTOGRAM_REGEX).each do |k,v|
-          aggregations.merge!({v => {:histogram => {
-            :field => v, :interval => extract_argument(k, HISTOGRAM_REGEX).to_f
-          }}})
         end
 
         aggregations
@@ -95,10 +82,10 @@ module Icelastic
             bucket = e
 
             if e =~ STAT_VAL_REGEX
-              bucket = $1
               aggs = {}
+              bucket = $1
               $2.split("|").each do |field|
-                aggs.merge!({ field => {:extended_stats => {:field => field}}})
+                aggs.merge!({ field => {"extended_stats" => {"field" => field}}})
               end
             end
 
@@ -106,11 +93,11 @@ module Icelastic
 
             aggregation = {
               label => {
-                :date_histogram => {:field => bucket, :interval => interval, :format => format}
+                "date_histogram" => {"field" => bucket, "interval" => interval, "format" => format}
               }
             }
 
-            aggregation[label][:aggs] = aggs if aggs && aggs.any?
+            aggregation[label]["aggs"] = aggs if aggs && aggs.any?
 
             aggregations.merge!(aggregation)
           end
