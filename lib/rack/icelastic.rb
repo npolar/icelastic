@@ -19,8 +19,10 @@ module Rack
     def call(env)
       self.env = env
       self.params = CGI.parse(env['QUERY_STRING'])
+
+      headers = csv? ? ({"Content-Type" => "text/plain; charset=utf-8"}) : ({"Content-Type" => "application/json; charset=utf-8"})
       # Execute a search and return the response if a search request
-      return [200, {"Content-Type" => "application/json; charset=utf-8"}, [client.search(request)]] if search?
+      return [200, headers, [client.search(request)]] if search?
 
       @app.call(env)
     end
@@ -46,6 +48,10 @@ module Rack
 
     def filter?
       params.keys.select{|param| param[/filter-.+|not-.+/]}.any?
+    end
+
+    def csv?
+      params.has_key?('format') && params['format'] == ["csv"]
     end
 
   end
