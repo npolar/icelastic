@@ -23,10 +23,10 @@ module Icelastic
 
       def build
         page = {}
-        page[:from] = start_term
-        page[:size] = limit_term
-        page[:sort] = sort_term if param?(SORT_REGEX)
-        page[:_source] = source_filter(FIELDS_REGEX) if param?(FIELDS_REGEX)
+        page["from"] = start_term
+        page["size"] = limit_term
+        page["sort"] = sort_term if param?(SORT_REGEX)
+        page["_source"] = source_filter(FIELDS_REGEX) if param?(FIELDS_REGEX)
         page
       end
 
@@ -46,8 +46,8 @@ module Icelastic
 
       def sort_term
         params["sort"].split(",").map do |v|
-          order, term = v =~ /-(.+)/ ? [:desc, $1] : [:asc, v]
-          {term => {:order => order, :ignore_unmapped => true, :mode => :avg}}
+          order, term = v =~ /-(.+)/ ? ["desc", $1] : ["asc", v]
+          {term => {"order" => order, "ignore_unmapped" => true, "mode" => "avg"}}
         end
       end
 
