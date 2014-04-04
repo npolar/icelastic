@@ -10,7 +10,7 @@ module Icelastic
       FILTERS = /^(?:filter-|not-)(.+)$/i
       NOT_FILTER = /not-(\w+)$/i
       OR_FILTER = /^([^|]+\|)+([^|]+)$/i
-      RANGE_FILTER = /^(\d+)\.\.(\d+)|\.\.(\d+)|(\d+)\.\.$/i
+      RANGE_FILTER = /^(-?\d+)\.\.(-?\d+)|\.\.(-?\d+)|(-?\d+)\.\.$/i
       DATE_REGEX = /^\d{4}\-(\d{2})?\-?(\d{2})?T?(\d{2}):?(\d{2})?:?(\d{2})?Z?/i
 
       def initialize(params)
@@ -18,10 +18,10 @@ module Icelastic
       end
 
       def build
-        filter = {:and => []}
+        filter = {"and" => []}
         params.each do |k,v|
           v.split(",").map do |val|
-            filter[:and] << (not_filter?(k) ? {:not => generate_filter(k, val)} : generate_filter(k, val))
+            filter["and"] << (not_filter?(k) ? {"not" => generate_filter(k, val)} : generate_filter(k, val))
           end
         end
         filter
@@ -48,7 +48,7 @@ module Icelastic
 
       # Builds a term block
       def term_segment(key, value)
-        {:term => {filter_field(key) => value}}
+        {"term" => {filter_field(key) => value}}
       end
 
       # Detect OR filter
@@ -59,7 +59,7 @@ module Icelastic
       # Build OR filter object
       # @see http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-or-filter.html Elasticsearch: or filter
       def or_filter(key, value)
-        {:or => value.split("|").map{|val| generate_filter(key, val)}}
+        {"or" => value.split("|").map{|val| generate_filter(key, val)}}
       end
 
       # Detect range filter
@@ -72,16 +72,25 @@ module Icelastic
       def range_filter(key, value)
         arg1, arg2 = value.split("..")
 
-        return {:range => {filter_field(key) => {:gte => arg1}}} if arg2.nil?
-        return {:range => {filter_field(key) => {:lte => arg2}}} if arg1.empty?
+        unless date_time?(arg1) || date_time?(arg2)
+          arg1 = arg1.empty? ? nil : arg1.to_f
+          arg2 = arg2.nil? ? nil : arg2.to_f
+        end
+
+        return {"range" => {filter_field(key) => {"gte" => arg1}}} unless arg2
+        return {"range" => {filter_field(key) => {"lte" => arg2}}} unless arg1
 
         arg1, arg2 = arg2, arg1 if arg1 > arg2
 
         {
-          :range => {
-            filter_field(key) => {:gte => arg1, :lte => arg2}
+          "range" => {
+            filter_field(key) => {"gte" => arg1, "lte" => arg2}
           }
         }
+      end
+
+      def date_time?(value)
+        value && value.match(/^\d{4}\-(\d{2})?\-?(\d{2})?T?(\d{2}):?(\d{2})?:?(\d{2})?Z?/)
       end
 
       # Select a subset of parameters based on a key regex
