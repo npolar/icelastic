@@ -71,9 +71,7 @@ module Icelastic
     end
 
     def query
-      q = Icelastic::Query.new
-      q.params = Icelastic::Default.params.merge(request_params)
-      q.build
+      Icelastic::Query.new(Icelastic::Default.params.merge(request_params)).build
     end
 
     def result

@@ -11,6 +11,10 @@ module Icelastic
 
   class Query
 
+    def initialize(params = nil)
+      self.params = params if params
+    end
+
     # Get request parameters
     def params
       @params ||= {"q" => "*"}
