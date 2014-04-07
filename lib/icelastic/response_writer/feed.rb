@@ -1,5 +1,19 @@
 module Icelastic
   module ResponseWriter
+
+    # Constructs a custom json feed response that borrows some
+    # elements from the Opensearch standard.
+    #
+    # [Authors]
+    #   - Ruben Dens
+    #
+    # @example Basic usage
+    #   feed = Icelastic::ResponseWriter::Feed.new(request, response)
+    #   feed = feed.build # build a feed hash
+    #   feed.to_json
+    #
+    # @see http://www.opensearch.org/Specifications/OpenSearch/1.1/Draft_5 Opensearch-1.1 Draft 5
+
     class Feed
 
       attr_accessor :params, :env, :body_hash, :aggregations
