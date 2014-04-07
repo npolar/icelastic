@@ -34,7 +34,6 @@ module Icelastic
       query.merge!(highlight)
       query.merge!(query_block)
       query.merge!(facets) unless facets.nil?
-
       query.to_json
     end
 
