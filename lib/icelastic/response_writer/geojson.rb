@@ -45,7 +45,7 @@ module Icelastic
             "type" => "Feature",
             "geometry" => {
               "type" => "LineString",
-              "coordinates" => items.map{|e| [geo(e)["longitude"], geo(e)["latitude"]] if geo?(e)}.uniq #DANGER UNIQ DESTROYS THE ORIGINAL DATA (ONLY USED TO DIFF BETWEEN DUPS)
+              "coordinates" => items.map{|e| [geo(e)["longitude"], geo(e)["latitude"]] if geo?(e)} #.uniq #DANGER UNIQ DESTROYS THE ORIGINAL DATA (ONLY USED TO DIFF BETWEEN DUPS)
             },
             "properties" => {
               "start_latitude" => items.first["latitude"],
