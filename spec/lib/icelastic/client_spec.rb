@@ -21,6 +21,11 @@ describe Icelastic::Client do
         :params => {
           :start => 1,
           :limit => 2
+        },
+        :geojson => {
+          :geometry => "linestring",
+          :latitude => "lat",
+          :longitude => "lng"
         }
       }
       @client = Icelastic::Client.new(config)
