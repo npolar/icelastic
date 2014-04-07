@@ -23,13 +23,13 @@ describe Icelastic::QuerySegment::Aggregation do
     context "term" do
 
       it "handle &facets=<field>" do
-        aggregation({"facets" => "topics"}).send(:term_aggregations).should == {"topics" => {:terms => {:field => "topics", :size => 15}}}
+        aggregation({"facets" => "topics"}).send(:term_aggregations).should == {"topics" => {"terms" => {"field" => "topics", "size" => 15}}}
       end
 
       it "handle &facets=<field1>,<field2>" do
         aggregation({"facets" => "topics,sets"}).send(:term_aggregations).should == {
-          "topics" => {:terms => {:field => "topics", :size => 15}},
-          "sets" => {:terms => {:field => "sets", :size => 15}}
+          "topics" => {"terms" => {"field" => "topics", "size" => 15}},
+          "sets" => {"terms" => {"field" => "sets", "size" => 15}}
         }
       end
 
@@ -38,7 +38,7 @@ describe Icelastic::QuerySegment::Aggregation do
     context "labeled" do
 
       it "handle &facet-my+label=<field>" do
-        aggregation({"facet-a label" => "topic"}).send(:labeled_aggregations).should == {"a label" => {:terms => {:field => "topic", :size => 15}}}
+        aggregation({"facet-a label" => "topic"}).send(:labeled_aggregations).should == {"a label" => {"terms" => {"field" => "topic", "size" => 15}}}
       end
 
     end
@@ -47,18 +47,10 @@ describe Icelastic::QuerySegment::Aggregation do
 
         it "handle &size-facet=<size>" do
           aggregation({"facets" => "topics,sets", "size-facet" => 50}).send(:term_aggregations).should == {
-            "topics" => {:terms => {:field => "topics", :size => 50}},
-            "sets" => {:terms => {:field => "sets", :size => 50}}
+            "topics" => {"terms" => {"field" => "topics", "size" => 50}},
+            "sets" => {"terms" => {"field" => "sets", "size" => 50}}
           }
         end
-
-    end
-
-    context "histogram" do
-
-      it "handle &facet[50]=depth" do
-        aggregation({"facet[50]" => "depth"}).send(:histogram_aggregations).should == {"depth" => {:histogram => {:field => "depth", :interval => 50}}}
-      end
 
     end
 
@@ -69,7 +61,7 @@ describe Icelastic::QuerySegment::Aggregation do
         it "handle &date-#{interval}=<field>" do
           aggregation({"date-#{interval}" => "published"}).send(:date_aggregations).should == {
             "#{interval}-published" => {
-              :date_histogram => {:field => "published", :interval => interval, :format => format}
+              "date_histogram" => {"field" => "published", "interval" => interval, "format" => format}
             }
           }
         end
@@ -77,10 +69,10 @@ describe Icelastic::QuerySegment::Aggregation do
         it "handle &date-#{interval}=<field1>,<field2>" do
           aggregation({"date-#{interval}" => "created,updated"}).send(:date_aggregations).should == {
             "#{interval}-created" => {
-              :date_histogram => {:field => "created", :interval => interval, :format => format}
+              "date_histogram" => {"field" => "created", "interval" => interval, "format" => format}
             },
             "#{interval}-updated" => {
-              :date_histogram => {:field => "updated",:interval => interval,:format => format}
+              "date_histogram" => {"field" => "updated", "interval" => interval, "format" => format}
             }
           }
         end
@@ -96,10 +88,10 @@ describe Icelastic::QuerySegment::Aggregation do
     it "handle dateStat-<interval>=<bucket-field>[<stat-field>|<stat-field>]" do
       aggregation("date-day" => "positioned[latitude|longitude]").send(:date_aggregations).should == {
         "day-positioned" => {
-          :date_histogram => {:field => "positioned", :interval => "day", :format => "yyyy-MM-dd"},
-          :aggs => {
-            "latitude" => {:extended_stats => {:field => "latitude"}},
-            "longitude" => {:extended_stats => {:field => "longitude"}}
+          "date_histogram" => {"field" => "positioned", "interval" => "day", "format" => "yyyy-MM-dd"},
+          "aggs" => {
+            "latitude" => {"extended_stats" => {"field" => "latitude"}},
+            "longitude" => {"extended_stats" => {"field" => "longitude"}}
           }
         }
       }
@@ -108,16 +100,16 @@ describe Icelastic::QuerySegment::Aggregation do
     it "handle dateStat-<interval>=<bucket-field>[<stat-field>|<stat-field>],<bucket-field2>[<stat-field>]" do
       aggregation("date-day" => "positioned[latitude|longitude],measured[depth]").send(:date_aggregations).should == {
         "day-positioned" => {
-          :date_histogram => {:field => "positioned", :interval => "day", :format => "yyyy-MM-dd"},
-          :aggs => {
-            "latitude" => {:extended_stats => {:field => "latitude"}},
-            "longitude" => {:extended_stats => {:field => "longitude"}}
+          "date_histogram" => {"field" => "positioned", "interval" => "day", "format" => "yyyy-MM-dd"},
+          "aggs" => {
+            "latitude" => {"extended_stats" => {"field" => "latitude"}},
+            "longitude" => {"extended_stats" => {"field" => "longitude"}}
           },
         },
         "day-measured" => {
-          :date_histogram => {:field => "measured", :interval => "day", :format => "yyyy-MM-dd"},
-          :aggs => {
-            "depth" => {:extended_stats => {:field => "depth"}}
+          "date_histogram" => {"field" => "measured", "interval" => "day", "format" => "yyyy-MM-dd"},
+          "aggs" => {
+            "depth" => {"extended_stats" => {"field" => "depth"}}
           }
         }
       }
@@ -126,17 +118,17 @@ describe Icelastic::QuerySegment::Aggregation do
     it "handle dateStat-<interval>=<bucket-field>[<stat-field>|<stat-field>]&dateStat-<interval2>=<bucket-field>[<stat-field>|<stat-field>]" do
       aggregation("date-day" => "positioned[latitude|longitude]","date-month" => "positioned[latitude|longitude]").send(:date_aggregations).should == {
         "day-positioned" => {
-          :date_histogram => {:field => "positioned", :interval => "day", :format => "yyyy-MM-dd"},
-          :aggs => {
-            "latitude" => {:extended_stats => {:field => "latitude"}},
-            "longitude" => {:extended_stats => {:field => "longitude"}}
+          "date_histogram" => {"field" => "positioned", "interval" => "day", "format" => "yyyy-MM-dd"},
+          "aggs" => {
+            "latitude" => {"extended_stats" => {"field" => "latitude"}},
+            "longitude" => {"extended_stats" => {"field" => "longitude"}}
           }
         },
         "month-positioned" => {
-          :date_histogram => {:field => "positioned", :interval => "month", :format => "yyyy-MM"},
-          :aggs => {
-            "latitude" => {:extended_stats => {:field => "latitude"}},
-            "longitude" => {:extended_stats => {:field => "longitude"}}
+          "date_histogram" => {"field" => "positioned", "interval" => "month", "format" => "yyyy-MM"},
+          "aggs" => {
+            "latitude" => {"extended_stats" => {"field" => "latitude"}},
+            "longitude" => {"extended_stats" => {"field" => "longitude"}}
           }
         }
       }

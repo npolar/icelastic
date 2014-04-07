@@ -16,22 +16,22 @@ describe Icelastic::QuerySegment::Filter do
 
       it "handle filter-<field>=<value>" do
         f = filter({"filter-foo"=>"bar"})
-        f.build.should == {:and => [{:term => {"foo" => "bar"}}]}
+        f.build.should == {"and" => [{"term" => {"foo" => "bar"}}]}
       end
 
       it "handle filter-<field>=<value>,<value>" do
         f = filter({"filter-foo"=>"bar,baz"})
-        f.build.should == {:and => [
-          {:term => {"foo" => "bar"}},
-          {:term => {"foo" => "baz"}}
+        f.build.should == {"and" => [
+          {"term" => {"foo" => "bar"}},
+          {"term" => {"foo" => "baz"}}
         ]}
       end
 
       it "handle filter-<field1>=<value>&filter-<field2>=<value>" do
         f = filter({"filter-foo"=>"bar", "filter-fu"=>"bar"})
-        f.build.should == {:and => [
-          {:term => {"foo" => "bar"}},
-          {:term => {"fu" => "bar"}}
+        f.build.should == {"and" => [
+          {"term" => {"foo" => "bar"}},
+          {"term" => {"fu" => "bar"}}
         ]}
       end
 
@@ -41,22 +41,22 @@ describe Icelastic::QuerySegment::Filter do
 
       it "handle filter-<field>=<value1>|<value2>|<value3>" do
         f = filter({"filter-foo"=>"bar|baz|bad"})
-        f.build.should == {:and => [{:or => [
-          {:term => {"foo" => "bar"}},
-          {:term => {"foo" => "baz"}},
-          {:term => {"foo" => "bad"}}
+        f.build.should == {"and" => [{"or" => [
+          {"term" => {"foo" => "bar"}},
+          {"term" => {"foo" => "baz"}},
+          {"term" => {"foo" => "bad"}}
         ]}]}
       end
 
       it "handle filter-<field>=<value1>|<value2>,<value3>" do
         f = filter({"filter-foo"=>"bar|baz|bad,bas"})
-        f.build.should == {:and => [
-          {:or => [
-            {:term => {"foo" => "bar"}},
-            {:term => {"foo" => "baz"}},
-            {:term => {"foo" => "bad"}}
+        f.build.should == {"and" => [
+          {"or" => [
+            {"term" => {"foo" => "bar"}},
+            {"term" => {"foo" => "baz"}},
+            {"term" => {"foo" => "bad"}}
           ]},
-          {:term => {"foo" => "bas"}}
+          {"term" => {"foo" => "bas"}}
         ]}
       end
 
@@ -67,8 +67,17 @@ describe Icelastic::QuerySegment::Filter do
       it "handle filter-<field>=<value1>..<value2>" do
         f = filter({"filter-foo" => "0..20"})
         f.build.should == {
-          :and => [
-            {:range => {"foo" => {:gte => "0", :lte => "20"}}}
+          "and" => [
+            {"range" => {"foo" => {"gte" => 0.0, "lte" => 20.0}}}
+          ]
+        }
+      end
+
+      it "handle filter-<field>=-<value1>..-<value2>" do
+        f = filter({"filter-foo" => "-5..-2"})
+        f.build.should == {
+          "and" => [
+            {"range" => {"foo" => {"gte" => -5.0, "lte" => -2.0}}}
           ]
         }
       end
@@ -76,8 +85,8 @@ describe Icelastic::QuerySegment::Filter do
       it "handle filter-<field>=<value1>.." do
         f = filter({"filter-foo" => "20.."})
         f.build.should == {
-          :and => [
-            {:range => {"foo" => {:gte => "20"}}}
+          "and" => [
+            {"range" => {"foo" => {"gte" => 20.0}}}
           ]
         }
       end
@@ -85,8 +94,8 @@ describe Icelastic::QuerySegment::Filter do
       it "handle filter-<field>=..<value2>" do
         f = filter({"filter-foo" => "..20"})
         f.build.should == {
-          :and => [
-            {:range => {"foo" => {:lte => "20"}}}
+          "and" => [
+            {"range" => {"foo" => {"lte" => 20.0}}}
           ]
         }
       end
@@ -94,8 +103,8 @@ describe Icelastic::QuerySegment::Filter do
       it "handle filter-<field>=20..10" do
         f = filter({"filter-foo" => "20..10"})
         f.build.should == {
-          :and => [
-            {:range => {"foo" => {:gte => "10", :lte => "20"}}}
+          "and" => [
+            {"range" => {"foo" => {"gte" => 10.0, "lte" => 20.0}}}
           ]
         }
       end
@@ -103,8 +112,8 @@ describe Icelastic::QuerySegment::Filter do
       it "handle filter-<date_time_field>=<dt1>..<dt2>" do
         f = filter({"filter-foo" => "2013-12-01T15:00:00Z..2013-08-01T12:00:00Z"})
         f.build.should == {
-          :and => [
-            {:range => {"foo" => {:gte => "2013-08-01T12:00:00Z", :lte => "2013-12-01T15:00:00Z"}}}
+          "and" => [
+            {"range" => {"foo" => {"gte" => "2013-08-01T12:00:00Z", "lte" => "2013-12-01T15:00:00Z"}}}
           ]
         }
       end
@@ -116,8 +125,8 @@ describe Icelastic::QuerySegment::Filter do
       it "handle not-<field>=<value>" do
         f = filter({"not-foo" => "bar"})
         f.build.should == {
-          :and => [
-            {:not => {:term => {"foo" => "bar"}}}
+          "and" => [
+            {"not" => {"term" => {"foo" => "bar"}}}
           ]
         }
       end
@@ -125,9 +134,9 @@ describe Icelastic::QuerySegment::Filter do
       it "handle not-<field>=20..10" do
         f = filter({"not-foo" => "20..10"})
         f.build.should == {
-          :and => [
+          "and" => [
             {
-              :not => {:range => {"foo" => {:gte => "10", :lte => "20"}}}
+              "not" => {"range" => {"foo" => {"gte" => 10.0, "lte" => 20.0}}}
             }
           ]
         }
@@ -136,12 +145,12 @@ describe Icelastic::QuerySegment::Filter do
       it "handle not-<field>=20..10|40..60" do
         f = filter({"not-foo" => "20..10|40..60"})
         f.build.should == {
-          :and => [
+          "and" => [
             {
-              :not => {
-                :or => [
-                  {:range => {"foo" => {:gte => "10", :lte => "20"}}},
-                  {:range => {"foo" => {:gte => "40", :lte => "60"}}}
+              "not" => {
+                "or" => [
+                  {"range" => {"foo" => {"gte" => 10.0, "lte" => 20.0}}},
+                  {"range" => {"foo" => {"gte" => 40.0, "lte" => 60.0}}}
                 ]
               }
             }
@@ -152,17 +161,17 @@ describe Icelastic::QuerySegment::Filter do
       it "handle not-<field>=<val1>,<val2>|<val3>,<val4>..<val5>" do
         f = filter({"not-foo" => "5,8|10,60..90"})
         f.build.should == {
-          :and => [
-            {:not => {:term => {"foo" => "5"}}},
-            {:not =>
+          "and" => [
+            {"not" => {"term" => {"foo" => "5"}}},
+            {"not" =>
               {
-                :or => [
-                  {:term => {"foo" => "8"}},
-                  {:term => {"foo" => "10"}}
+                "or" => [
+                  {"term" => {"foo" => "8"}},
+                  {"term" => {"foo" => "10"}}
                 ]
               }
             },
-            {:not => {:range => {"foo" => {:gte => "60", :lte => "90"}}}}
+            {"not" => {"range" => {"foo" => {"gte" => 60.0, "lte" => 90.0}}}}
           ]
         }
       end
