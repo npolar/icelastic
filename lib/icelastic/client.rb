@@ -23,7 +23,7 @@ module Icelastic
       self.log = config.has_key?(:log) ? config[:log] : false
       self.client = url.nil? ? Elasticsearch::Client.new(:log => log) : Elasticsearch::Client.new(:url => url, :log => log)
       Icelastic::Default.params = hash_key_to_s(config[:params]) if config.has_key?(:params) && !config[:params].nil?
-      Icelastic::Default.geo_params = hash_key_to_s(config[:geojson]) if config.has_key?(:geojson)
+      Icelastic::Default.geo_params = hash_key_to_s(config[:geojson]) if config.has_key?(:geojson) && !config[:geojson].nil?
     end
 
     # Execute a search operation
