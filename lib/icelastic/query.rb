@@ -2,12 +2,12 @@ module Icelastic
 
   # This class is used to build elasticsearch queries from url parameters
   #
-  # [Usage]
-  # query = Icelastic::Query.new( params )
-  # query.build
-  #
   # [Authors]
   #   - Ruben Dens
+  #
+  # @example Basic Usage
+  #   query = Icelastic::Query.new( params )
+  #   query.build
 
   class Query
 
@@ -79,7 +79,6 @@ module Icelastic
     end
 
     # Builds a filter segment
-    # @see #parse_filter_values
     # @see http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-query-filter.html Elasticsearch: Query filters
     # @see http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-and-filter.html Elasticsearch: And filters
     def filter
