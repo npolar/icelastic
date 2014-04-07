@@ -17,31 +17,35 @@ describe Icelastic::ResponseWriter::Csv do
   end
 
   def documents
-    [
-      {
-        "measurement" => 3464123760.410081,
-        "label" => "text",
-        "sarray" => ["a","b","c"],
-        "narray" => [1,2,3],
-        "object" => {"key" => "value"}
-      },
-      {
-        "measurement" => 3464123760.410081,
-        "label" => "text",
-        "sarray" => ["a","b","c"],
-        "narray" => [1,2,3],
-        "aarray" => [[1,3],[2,4],[3,5]],
-        "object" => {"key" => "value"}
-      },
-      {
-        "measurement" => 3464123760.410081,
-        "label" => "text",
-        "narray" => [1,2,3],
-        "oarray" => [{"a" => "v1"},{"b" => "v2"},{"c" => "v3"}],
-        "object" => {"key" => "value"},
-        "nested" => {"key" => {"nested_key" => "nVal"}}
+    {
+      "feed" => {
+        "entries" => [
+          {
+            "measurement" => 3464123760.410081,
+            "label" => "text",
+            "sarray" => ["a","b","c"],
+            "narray" => [1,2,3],
+            "object" => {"key" => "value"}
+          },
+          {
+            "measurement" => 3464123760.410081,
+            "label" => "text",
+            "sarray" => ["a","b","c"],
+            "narray" => [1,2,3],
+            "aarray" => [[1,3],[2,4],[3,5]],
+            "object" => {"key" => "value"}
+          },
+          {
+            "measurement" => 3464123760.410081,
+            "label" => "text",
+            "narray" => [1,2,3],
+            "oarray" => [{"a" => "v1"},{"b" => "v2"},{"c" => "v3"}],
+            "object" => {"key" => "value"},
+            "nested" => {"key" => {"nested_key" => "nVal"}}
+          }
+        ]
       }
-    ]
+    }
   end
 
   def config

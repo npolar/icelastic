@@ -4,10 +4,10 @@ module Icelastic
 
       attr_accessor :env, :documents, :params
 
-      def initialize(request, documents)
+      def initialize(request, feed)
         self.env = request.env
         self.params = request.params
-        self.documents = documents
+        self.documents = feed["feed"]["stats"] ? feed["feed"]["stats"] : feed["feed"]["entries"]
       end
 
       def build
