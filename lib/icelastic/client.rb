@@ -42,8 +42,7 @@ module Icelastic
 
     # Generate CSV
     def csv
-      data = feed["feed"]["stats"] ? feed["feed"]["stats"] : feed["feed"]["entries"]
-      Icelastic::ResponseWriter::Csv.new(Rack::Request.new(env), data).build
+      Icelastic::ResponseWriter::Csv.new(Rack::Request.new(env), feed).build
     end
 
     # Call the feed response writer
