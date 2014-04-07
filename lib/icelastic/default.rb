@@ -26,7 +26,7 @@ module Icelastic
     end
 
     def self.geo_params=(params)
-      @gp = GEO_PARAMS.merge(geo_params)
+      @gp = GEO_PARAMS.merge(params)
     end
 
   end
