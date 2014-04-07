@@ -1,14 +1,32 @@
 module Icelastic
   module ResponseWriter
+
+    # Response writer that supports geojson generation based on the
+    # libraries feed response
+    #
+    # [Authors]
+    #   - Ruben Dens
+    #
+    # @example Basic Usage
+    #   geojson = Icelastic::ResponseWriter::GeoJSON.new(request, response)
+    #   geojson = geojson.build # build a feed hash
+    #   geojson.to_json
+    #
+    # @example Parameter Switches
+    #   # Controls the geometry type. Defaults to point
+    #   &geometry=(point|multipoint|linestring)
+    #
+    # @see http://www.opensearch.org/Specifications/OpenSearch/1.1/Draft_5 Opensearch-1.1 Draft 5
+
     class GeoJSON
 
       attr_accessor :feed, :stats, :entries, :params
 
-      def initialize(request, response)
+      def initialize(request, feed)
         self.params = request.params
-        self.entries = response["feed"]["entries"]
-        self.stats = response["feed"]["stats"]
-        self.feed = response["feed"].delete_if{|k| ["entries", "facets", "stats"].include?(k) }
+        self.entries = feed["feed"]["entries"]
+        self.stats = feed["feed"]["stats"]
+        self.feed = feed["feed"].delete_if{|k| ["entries", "facets", "stats"].include?(k) }
       end
 
       def build
@@ -45,13 +63,13 @@ module Icelastic
             "type" => "Feature",
             "geometry" => {
               "type" => "LineString",
-              "coordinates" => items.map{|e| [geo(e)["longitude"], geo(e)["latitude"]] if geo?(e)} #.uniq #DANGER UNIQ DESTROYS THE ORIGINAL DATA (ONLY USED TO DIFF BETWEEN DUPS)
+              "coordinates" => items.map{|e| [longitude(e), latitude(e)] if geo?(e)} #.uniq #DANGER UNIQ DESTROYS THE ORIGINAL DATA (ONLY USED TO DIFF BETWEEN DUPS)
             },
             "properties" => {
-              "start_latitude" => items.first["latitude"],
-              "start_longitude" => items.first["longitude"],
-              "stop_latitude" => items.last["latitude"],
-              "stop_longitde" => items.last["longitude"]
+              "start_latitude" => latitude(items.first),
+              "start_longitude" => longitude(items.first),
+              "stop_latitude" => latitude(items.last),
+              "stop_longitde" => longitude(items.last)
             }
           }
         ]
@@ -64,7 +82,10 @@ module Icelastic
               #:type => :Feature,
               #:geometry => {
                 #:type => :LineString,
-                #:coordinates => [[geo(e)["longitude"], geo(e)["latitude"]], [geo(items[i+1])["longitude"], geo(items[i+1])["latitude"]]]
+                #:coordinates => [
+                  #[longitude(e), latitude(e)],
+                  #[longitude(items[i+1]), latitude(items[i+1])]
+                #]
               #},
               #:properties => {
                 #"sequence" => i,
@@ -85,7 +106,7 @@ module Icelastic
               "type" => "Feature",
               "geometry" => {
                 "type" => "Point",
-                "coordinates" => [geo(e)["longitude"], geo(e)["latitude"]]
+                "coordinates" => [longitude(e), latitude(e)]
               },
               "properties" => e.merge({"sequence" => i}) #stats ? flatten_stats(e) : e
             }
@@ -99,7 +120,7 @@ module Icelastic
             "type" => "Feature",
             "geometry" => {
               "type" => "MultiPoint",
-              "coordinates" => items.map{|e| [geo(e)["longitude"], geo(e)["latitude"]] if geo?(e)}
+              "coordinates" => items.map{|e| [longitude(e), latitude(e)] if geo?(e)}
             },
             "properties" => common_items(items.first, items.last)
           }
@@ -110,11 +131,14 @@ module Icelastic
         obj["latitude"] && obj["longitude"]
       end
 
-      def geo(obj)
-        {
-          "latitude" => stats ? obj["latitude"]["avg"] : obj["latitude"],
-          "longitude" => stats ? obj["longitude"]["avg"] : obj["longitude"]
-        }
+      # Extract latitude from the object
+      def latitude(obj)
+        stats ? obj["latitude"]["avg"] : obj["latitude"]
+      end
+
+      # Extract longitude from the object
+      def longitude(obj)
+        stats ? obj["longitude"]["avg"] : obj["longitude"]
       end
 
       #def flatten_stats(stat)
@@ -130,6 +154,7 @@ module Icelastic
         #stat.merge(obj)
       #end
 
+      # Returns a hash of common items in two hashes
       def common_items(obj1, obj2)
         obj1.select do |k,v|
           obj2.has_key?(k) && v == obj2[k]
