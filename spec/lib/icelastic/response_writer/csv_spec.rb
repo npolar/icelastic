@@ -1,9 +1,9 @@
 require "spec_helper"
 
-describe Icelastic::CsvWriter do
+describe Icelastic::ResponseWriter::Csv do
 
   def writer(q=nil)
-    Icelastic::CsvWriter.new(request(q), documents)
+    Icelastic::ResponseWriter::Csv.new(request(q), documents)
   end
 
   def request(query=nil)
@@ -49,7 +49,7 @@ describe Icelastic::CsvWriter do
   end
 
   context "#initialize" do
-    
+
     it "set the request env" do
       writer.env.should include('QUERY_STRING')
     end
