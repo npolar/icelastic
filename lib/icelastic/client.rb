@@ -21,7 +21,7 @@ module Icelastic
       self.search_index = config[:index] if config.has_key?(:index)
       self.type = config[:type] if config.has_key?(:type)
       self.log = config.has_key?(:log) ? config[:log] : false
-      self.client = url.nil? ? Elasticsearch::Client.new : Elasticsearch::Client.new(:url => url, :log => log)
+      self.client = url.nil? ? Elasticsearch::Client.new(:log => log) : Elasticsearch::Client.new(:url => url, :log => log)
       Icelastic::Default.params = Icelastic::Default.params.merge(hash_key_to_s(config[:params])) if config.has_key?(:params) && !config[:params].nil?
     end
 
