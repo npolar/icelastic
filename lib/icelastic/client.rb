@@ -14,9 +14,10 @@ module Icelastic
 
   class Client
 
-    attr_accessor :client, :url, :search_index, :type, :log, :env, :response
+    attr_accessor :client, :url, :search_index, :type, :log, :env, :response, :geojson
 
     def initialize(config={})
+      self.geojson = config[:geojson] if config.has_key?(:geojson)
       self.url = config[:url] if config.has_key?(:url)
       self.search_index = config[:index] if config.has_key?(:index)
       self.type = config[:type] if config.has_key?(:type)

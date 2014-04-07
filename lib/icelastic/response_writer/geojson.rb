@@ -16,7 +16,7 @@ module Icelastic
     #   # Controls the geometry type. Defaults to point
     #   &geometry=(point|multipoint|linestring)
     #
-    # @see http://www.opensearch.org/Specifications/OpenSearch/1.1/Draft_5 Opensearch-1.1 Draft 5
+    # @see http://geojson.org/geojson-spec.html GeoJSON Spec
 
     class GeoJSON
 
@@ -39,22 +39,53 @@ module Icelastic
 
       private
 
-      def geometry?
-        params.select{|k, v| k =~ /^geometry$/}.any?
+      def defaults
+        Icelastic::Default.geo_params
       end
 
-      # Select the geometry mode
-      def select_mode
-        if geometry?
-          case params["geometry"]
-          when /LineString/i then stats ? generate_linestring(stats) : generate_linestring
-          when /MultiPoint/i then stats ? generate_multi_point(stats) : generate_multi_point
-          #when /ContextLine/i then stats ? generate_contextline(stats) : generate_contextline
-          else stats ? generate_points(stats) : generate_points
-          end
-        else
-          stats ? generate_points(stats) : generate_points
+      # Returns a hash of common items in two hashes
+      def common_items(obj1, obj2)
+        obj1.select do |k,v|
+          obj2.has_key?(k) && v == obj2[k]
         end
+      end
+
+      # Check if the object contains the geo fields
+      def geo?(obj)
+        obj[lat_key] && obj[lng_key]
+      end
+
+      # True if the geometry is set by the user
+      def geometry?
+        params.any?{|k, v| k =~ /^geometry$/}
+      end
+
+      def generate_points(items = entries)
+        items.each_with_index.map do |e, i|
+          if geo?(e)
+            {
+              "type" => "Feature",
+              "geometry" => {
+                "type" => "Point",
+                "coordinates" => [longitude(e), latitude(e)]
+              },
+              "properties" => e.merge({"sequence" => i}) #stats ? flatten_stats(e) : e
+            }
+          end
+        end
+      end
+
+      def generate_multi_point(items = entries)
+        [
+          {
+            "type" => "Feature",
+            "geometry" => {
+              "type" => "MultiPoint",
+              "coordinates" => items.map{|e| [longitude(e), latitude(e)] if geo?(e)}
+            },
+            "properties" => common_items(items.first, items.last)
+          }
+        ]
       end
 
       def generate_linestring(items = entries)
@@ -99,46 +130,37 @@ module Icelastic
         #i
       #end
 
-      def generate_points(items = entries)
-        items.each_with_index.map do |e, i|
-          if geo?(e)
-            {
-              "type" => "Feature",
-              "geometry" => {
-                "type" => "Point",
-                "coordinates" => [longitude(e), latitude(e)]
-              },
-              "properties" => e.merge({"sequence" => i}) #stats ? flatten_stats(e) : e
-            }
-          end
-        end
+      def lat_key
+        defaults["latitude"]
       end
 
-      def generate_multi_point(items = entries)
-        [
-          {
-            "type" => "Feature",
-            "geometry" => {
-              "type" => "MultiPoint",
-              "coordinates" => items.map{|e| [longitude(e), latitude(e)] if geo?(e)}
-            },
-            "properties" => common_items(items.first, items.last)
-          }
-        ]
-      end
-
-      def geo?(obj)
-        obj["latitude"] && obj["longitude"]
+      def lng_key
+        defaults["longitude"]
       end
 
       # Extract latitude from the object
       def latitude(obj)
-        stats ? obj["latitude"]["avg"] : obj["latitude"]
+        stats ? obj[lat_key]["avg"] : obj[lat_key]
       end
 
       # Extract longitude from the object
       def longitude(obj)
-        stats ? obj["longitude"]["avg"] : obj["longitude"]
+        stats ? obj[lng_key]["avg"] : obj[lng_key]
+      end
+
+      # Return which mode to use
+      def mode
+        geometry? ? params["geometry"] : defaults["geometry"]
+      end
+
+      # Trigger the correct generator depending on the mode
+      def select_mode
+        case mode
+        when /LineString/i then stats ? generate_linestring(stats) : generate_linestring
+        when /MultiPoint/i then stats ? generate_multi_point(stats) : generate_multi_point
+        #when /ContextLine/i then stats ? generate_contextline(stats) : generate_contextline
+        else stats ? generate_points(stats) : generate_points
+        end
       end
 
       #def flatten_stats(stat)
@@ -153,13 +175,6 @@ module Icelastic
 
         #stat.merge(obj)
       #end
-
-      # Returns a hash of common items in two hashes
-      def common_items(obj1, obj2)
-        obj1.select do |k,v|
-          obj2.has_key?(k) && v == obj2[k]
-        end
-      end
 
     end
   end
