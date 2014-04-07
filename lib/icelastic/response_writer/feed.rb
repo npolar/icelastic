@@ -107,8 +107,6 @@ module Icelastic
             if e["key_as_string"]
               e["#{field}"] = e.delete("key_as_string")
               e.delete("key")
-            else
-              e["key"]
             end
 
             e["filter"] = "#{interval}-#{field}"
