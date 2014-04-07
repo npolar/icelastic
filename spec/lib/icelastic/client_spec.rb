@@ -52,8 +52,12 @@ describe Icelastic::Client do
 
       context "configuration" do
 
-        it "override default params if provided" do
+        it "override default params" do
           Icelastic::Default.params.should include("start" => 1, "limit" => 2)
+        end
+
+        it "override default geo_params" do
+          Icelastic::Default.geo_params.should include("latitude" => "lat", "longitude" => "lng")
         end
 
       end

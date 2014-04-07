@@ -44,6 +44,7 @@ describe Icelastic::ResponseWriter::GeoJSON do
   end
 
   def geojson(request, r = response)
+    Icelastic::Default.geo_params = Icelastic::Default::GEO_PARAMS
     Icelastic::ResponseWriter::GeoJSON.new(request, r)
   end
 
