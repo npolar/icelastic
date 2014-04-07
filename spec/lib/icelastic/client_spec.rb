@@ -10,36 +10,6 @@ describe Icelastic::Client do
     )
   end
 
-  def index_request
-    Rack::Request.new(
-      Rack::MockRequest.env_for(
-        "/", "HTTP_HOST" => "example.org", "REQUEST_METHOD" => "POST", "REQUEST_PATH" => "",
-        "rack.input" => StringIO.new({:id => 1, :title => "My test document"}.to_json)
-      )
-    )
-  end
-
-  def update_request
-    Rack::Request.new(
-      Rack::MockRequest.env_for(
-        "/", "HTTP_HOST" => "example.org", "REQUEST_METHOD" => "POST", "REQUEST_PATH" => "",
-        "rack.input" => StringIO.new({:id => 1, :title => "Updated test document"}.to_json)
-      )
-    )
-  end
-
-  def bulk_request
-    Rack::Request.new(
-      Rack::MockRequest.env_for(
-        "/", "HTTP_HOST" => "example.org", "REQUEST_METHOD" => "POST", "REQUEST_PATH" => "",
-        "rack.input" => StringIO.new([
-          {:id => 2, :title => "Bulk a"},
-          {:id => 3, :title => "Bulk b"}
-        ].to_json)
-      )
-    )
-  end
-
   context "Client" do
 
     before(:each) do
@@ -61,6 +31,7 @@ describe Icelastic::Client do
       context "defaults" do
 
         before(:each) do
+          Icelastic::Default.params = Icelastic::Default::DEFAULT_PARAMS
           @client = Icelastic::Client.new
         end
 
@@ -69,7 +40,7 @@ describe Icelastic::Client do
         end
 
         it "use default params when not overriden" do
-          @client.params.should include(:start => 0, :limit => 25)
+          Icelastic::Default.params.should include("start" => 0, "limit" => 20)
         end
 
       end
@@ -77,7 +48,7 @@ describe Icelastic::Client do
       context "configuration" do
 
         it "override default params if provided" do
-          @client.params.should include(:start => 1, :limit => 2)
+          Icelastic::Default.params.should include("start" => 1, "limit" => 2)
         end
 
       end
@@ -86,17 +57,26 @@ describe Icelastic::Client do
 
     context "#search" do
 
+      it "return a raw response" do
+        JSON.parse(@client.search(search_request("q=&format=raw"))).should include("hits")
+      end
+
       it "return a feed response" do
         JSON.parse(@client.search(search_request("q=bear"))).should include("feed")
       end
 
-      it "return a all documents" do
-        JSON.parse(@client.search(search_request("q=bear&limit=all"))).should include("feed")
+      it "return a csv response" do
+        Icelastic::ResponseWriter::Csv.any_instance.stub(:build).and_return("csv response")
+        @client.search(search_request("q=bear&format=csv")).should == "csv response"
       end
 
-      it "return a csv response" do
-        Icelastic::CsvWriter.any_instance.stub(:build).and_return("csv response")
-        @client.search(search_request("q=bear&format=csv")).should == "csv response"
+      it "return a geojson response" do
+        Icelastic::ResponseWriter::GeoJSON.any_instance.stub(:build).and_return("GeoJSON")
+        @client.search(search_request("q=bear&format=geojson")).should == "GeoJSON"
+      end
+
+      it "return a all documents" do
+        JSON.parse(@client.search(search_request("q=bear&limit=all"))).should include("feed")
       end
 
     end
