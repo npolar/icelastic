@@ -167,13 +167,22 @@ module Icelastic
       # Returns a query string based on the facet contents and request environment
       def facet_query(field, term)
         k = "filter-#{field}"
-        params.has_key?(k) ? process_params(k, term) : "#{env['QUERY_STRING'].gsub(/\s/, "+")}&filter-#{field}=#{term.to_s.gsub(/\s/, "+")}"
+        params.has_key?(k) ? process_params(k, term) : add_param(k, term)
       end
 
-      # Use the current parameter hash to construct a new query string.
-      # This is done to prevent duplications in the query output
+      # Add a new parameter to the hash
+      def add_param(key, term)
+        params = request_params
+        params.delete("start") # remove any start offset and return to default
+        params.merge!({key => term})
+
+        query_from_params(params)
+      end
+
+      # Merge or remove the term if the key is already in the paramter hash
       def process_params(key, term)
-        params = request_params(Rack::Request.new(env))
+        params = request_params
+        params.delete("start") # remove the start key when switching on a facet
 
         # check if the filter already exists with this term
         if params[key].match(/#{term}/)
@@ -183,23 +192,28 @@ module Icelastic
           params[key] += ",#{term}"
         end
 
+
         query_from_params(params)
       end
 
       # Generate iso8601 ranges for the facet filter
       def time_range(interval, term)
         date = fix_date(interval, term)
-        start = DateTime.parse(date).to_time.utc.iso8601
-        stop = DateTime.parse(date)
 
-        stop = case interval
-        when "hour" then (stop.to_time + 3600).utc.iso8601
-        when "day" then stop.next_day.to_time.utc.iso8601
-        when "month" then stop.next_month.to_time.utc.iso8601
-        when "year" then stop.next_year.to_time.utc.iso8601
-        end
+        start = DateTime.parse(date).to_time.utc.iso8601
+        stop = next_time(DateTime.parse(date), interval)
 
         "#{start}..#{stop}"
+      end
+
+      # calculate the next time based of a start and interval
+      def next_time(start_date, interval)
+        case interval
+        when "hour" then (start_date.to_time + 3600).utc.iso8601
+        when "day" then start_date.next_day.to_time.utc.iso8601
+        when "month" then start_date.next_month.to_time.utc.iso8601
+        when "year" then start_date.next_year.to_time.utc.iso8601
+        end
       end
 
       # Generate a parsable date string
@@ -235,7 +249,7 @@ module Icelastic
       end
 
       # Extract the parameters from the request and merge them with the defaults
-      def request_params(request)
+      def request_params(request = Rack::Request.new(env))
         p = request.params["limit"] == "all" ? request.params.merge({"limit" => total_results}) : request.params
         Icelastic::Default.params.merge(p)
       end
