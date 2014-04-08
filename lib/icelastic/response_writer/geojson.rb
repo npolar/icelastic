@@ -75,26 +75,13 @@ module Icelastic
         end
       end
 
-      def generate_multi_point(items = entries)
+      def generate_multi_feature(items = entries, type)
         [
           {
             "type" => "Feature",
             "geometry" => {
-              "type" => "MultiPoint",
+              "type" => type,
               "coordinates" => items.map{|e| [longitude(e), latitude(e)] if geo?(e)}
-            },
-            "properties" => global_properties(items)
-          }
-        ]
-      end
-
-      def generate_linestring(items = entries)
-        [
-          {
-            "type" => "Feature",
-            "geometry" => {
-              "type" => "LineString",
-              "coordinates" => items.map{|e| [longitude(e), latitude(e)] if geo?(e)} #.uniq #DANGER UNIQ DESTROYS THE ORIGINAL DATA (ONLY USED TO DIFF BETWEEN DUPS)
             },
             "properties" => global_properties(items)
           }
@@ -161,8 +148,8 @@ module Icelastic
       # Trigger the correct generator depending on the mode
       def select_mode
         case mode
-        when /LineString/i then stats ? generate_linestring(stats) : generate_linestring
-        when /MultiPoint/i then stats ? generate_multi_point(stats) : generate_multi_point
+        when /LineString/i then stats ? generate_multi_feature(stats, "LineString") : generate_multi_feature(entries, "LineString")
+        when /MultiPoint/i then stats ? generate_multi_feature(stats, "MultiPoint") : generate_multi_feature(entries, "MultiPoint")
         #when /ContextLine/i then stats ? generate_contextline(stats) : generate_contextline
         else stats ? generate_points(stats) : generate_points
         end
