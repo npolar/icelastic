@@ -83,7 +83,7 @@ module Icelastic
               "type" => "MultiPoint",
               "coordinates" => items.map{|e| [longitude(e), latitude(e)] if geo?(e)}
             },
-            "properties" => common_items(items.first, items.last)
+            "properties" => global_properties(items)
           }
         ]
       end
@@ -96,14 +96,19 @@ module Icelastic
               "type" => "LineString",
               "coordinates" => items.map{|e| [longitude(e), latitude(e)] if geo?(e)} #.uniq #DANGER UNIQ DESTROYS THE ORIGINAL DATA (ONLY USED TO DIFF BETWEEN DUPS)
             },
-            "properties" => {
-              "start_latitude" => latitude(items.first),
-              "start_longitude" => longitude(items.first),
-              "stop_latitude" => latitude(items.last),
-              "stop_longitde" => longitude(items.last)
-            }
+            "properties" => global_properties(items)
           }
         ]
+      end
+
+      def global_properties(items)
+        p = {
+          "start_latitude" => latitude(items.first),
+          "start_longitude" => longitude(items.first),
+          "stop_latitude" => latitude(items.last),
+          "stop_longitde" => longitude(items.last)
+        }
+        p.merge(common_items(items.first, items.last))
       end
 
       #def generate_contextline(items = entries)
