@@ -75,6 +75,7 @@ module Icelastic
         end
       end
 
+      # Generate a feature with multiple elements like LineString and MultiPoint
       def generate_multi_feature(items = entries, type)
         [
           {
