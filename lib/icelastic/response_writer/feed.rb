@@ -172,28 +172,27 @@ module Icelastic
 
       # Add a new parameter to the hash
       def add_param(key, term)
-        params = request_params
-        params.delete("start") # remove any start offset and return to default
-        params.merge!({key => term})
+        p = request_params
+        p.delete("start") # remove any start offset and return to default
+        p.merge!({key => term})
 
-        query_from_params(params)
+        query_from_params(p)
       end
 
       # Merge or remove the term if the key is already in the paramter hash
       def process_params(key, term)
-        params = request_params
-        params.delete("start") # remove the start key when switching on a facet
+        p = request_params
+        p.delete("start") # remove the start key when switching on a facet
 
         # check if the filter already exists with this term
-        if params[key].match(/#{term}/)
-          vals = params[key].split(",").delete_if{|e| e == term}
-          vals.any? ? params[key] = vals.join(",") : params.delete(key)
+        if p[key].match(/#{term}/)
+          vals = p[key].split(",").delete_if{|e| e == term}
+          vals.any? ? p[key] = vals.join(",") : p.delete(key)
         else
-          params[key] += ",#{term}"
+          p[key] += ",#{term}"
         end
 
-
-        query_from_params(params)
+        query_from_params(p)
       end
 
       # Generate iso8601 ranges for the facet filter
@@ -208,12 +207,14 @@ module Icelastic
 
       # calculate the next time based of a start and interval
       def next_time(start_date, interval)
-        case interval
-        when "hour" then (start_date.to_time + 3600).utc.iso8601
-        when "day" then start_date.next_day.to_time.utc.iso8601
-        when "month" then start_date.next_month.to_time.utc.iso8601
-        when "year" then start_date.next_year.to_time.utc.iso8601
+        t = case interval
+        when "hour" then (start_date.to_time + 3600)
+        when "day" then start_date.next_day.to_time
+        when "month" then start_date.next_month.to_time
+        when "year" then start_date.next_year.to_time
         end
+
+        t.utc.iso8601
       end
 
       # Generate a parsable date string
