@@ -8,7 +8,7 @@ module Icelastic
       attr_accessor :params
 
       FILTERS = /^(?:filter-|not-)(.+)$/i
-      NOT_FILTER = /not-(\w+)$/i
+      NOT_FILTER = /not-(.+)$/i
       OR_FILTER = /^([^|]+\|)+([^|]+)$/i
       RANGE_FILTER = /^(-?\d+)\.\.(-?\d+)|\.\.(-?\d+)|(-?\d+)\.\.$/i
       DATE_REGEX = /^\d{4}\-(\d{2})?\-?(\d{2})?T?(\d{2}):?(\d{2})?:?(\d{2})?Z?/i
