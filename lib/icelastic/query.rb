@@ -35,7 +35,7 @@ module Icelastic
     def build
       query = {}
       query.merge!(paging)
-      query.merge!(highlight)
+      query.merge!(highlight) if highlight?
       query.merge!(query_block)
       query.merge!(facets) unless facets.nil?
       query.to_json
@@ -98,6 +98,10 @@ module Icelastic
     # Build paging info
     def paging
       Icelastic::QuerySegment::Paging.new(params).build
+    end
+
+    def highlight?
+      params.select{|k,v| k == "highlight" && v == "true"}.any?
     end
 
     # Build highlighter segment
