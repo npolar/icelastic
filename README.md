@@ -79,6 +79,7 @@ And then execute:
   "?sort=-<field>" # Sort descending on field
 
   "?fields=<field1>,<field2>,<field3>" # Only show fields 1,2,3 in the response rows
+  "?highlight=true" # Enable term highlighting. Injects a highlight key with the relevant sections into the entry
 ```
 
 #### Filtered Queries
@@ -109,6 +110,12 @@ And then execute:
 #### Output Format
 
 ```ruby
+  "?format=raw" # Returns the  raw elasticsearch response (application/json)
+
+  "?format=geojson" # Return a GeoJSON featureCollection containing point features
+  "?format=geojson&geometry=linestring" # Return a GeoJSON featureCollection containing a linestring feature
+  "?format=geojson&geometry=multipoint" # Return a GeoJSON featureCollection containing a multipoint feature
+
   "?format=csv" # Return results as csv (Only basic support)
   "?format=csv&fields=<field1>" # For the best results with csv specify the fields you want in the results
 ```
