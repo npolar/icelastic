@@ -84,7 +84,7 @@ module Icelastic
             if e =~ STAT_VAL_REGEX
               aggs = {}
               bucket = $1
-              $2.split("|").each do |field|
+              $2.split(":").each do |field|
                 aggs.merge!({ field => {"extended_stats" => {"field" => field}}})
               end
             end
