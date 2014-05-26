@@ -102,9 +102,15 @@ And then execute:
   "?facets=<field1>,<field2>" # Facet on field1 and field2
   "?facet-<name>=<field>" # Labeled facet (generates a facet with a specific name)
 
-  "?date-<interval>=<field1>,<field2>" # Generate a date facets with the specified interval (year|month|day)
+  "?date-<interval>=<field1>,<field2>" # Generate a date facet with the specified interval (year|month|day)
 
   "?size-facet=<number>" # Specify the number of facets to return
+```
+
+#### Aggregations
+
+```ruby
+  "?date-<interval>=<field>[<field1>:<field2>]" # Specify a temporal aggregation
 ```
 
 #### Output Format
