@@ -111,7 +111,7 @@ module Icelastic
         when "day" then "yyyy-MM-dd"
         when "month" then "yyyy-MM"
         when "year" then "yyyy"
-        else "yyyy-MM-dd'T'hh:mm:ss'Z'"
+        else "yyyy-MM-dd'T'HH:mm:ss'Z'"
         end
       end
 
