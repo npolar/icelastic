@@ -45,7 +45,7 @@ module Icelastic
         docs = []
         documents.each do |doc|
           row = []
-          header.each_with_index {|field, i| row[i] = doc[field] ? handle_element(doc[field]) : "null"}
+          header.each_with_index {|field, i| row[i] = handle_sub_fields(field, doc)}
           docs << row
         end
         docs
@@ -57,6 +57,30 @@ module Icelastic
         when Array then handle_array(element).join("|")
         else element
         end
+      end
+
+      def handle_sub_fields(field, doc)
+        arguments = field.split(".") # Split chained fields on the dot => person.first_name
+        val = doc[arguments.shift] # Initialize with the first argument field
+
+        val.nil? ? "null" : grab_sub_value(val, arguments)
+      end
+
+      # Use the field arguments to dig into the structure and retrieve the bottom value
+      def grab_sub_value(val, args)
+        args.each do |a|
+          if val.is_a?(Array)
+            val = val.any? ? map_array_to_object_field(a, val) : "null"
+          else
+            val.nil? ? (return "null") : (val = val[a]) # Once the value becomes nil return "null" and bail
+          end
+        end
+
+        handle_element(val)
+      end
+
+      def map_array_to_object_field(field, array)
+        array.map{|e| e[field].nil? ? "null" : e[field]}
       end
 
       # Remap hash values to the proper format
