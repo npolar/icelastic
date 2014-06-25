@@ -86,6 +86,14 @@ describe Icelastic::ResponseWriter::Csv do
       writer.build.should include("3464123760.410081\ttext\ta|b|c\n")
     end
 
+    it "handle nested fields in an object" do
+      writer("q=&fields=object.key").build.should include("value\nvalue\nvalue")
+    end
+
+    it "handle nested fields in an array" do
+      writer("q=&fields=oarray.b").build.should include("null|v2|null")
+    end
+
   end
 
 end
