@@ -26,7 +26,7 @@ module Icelastic
 
       def doc_headers
         h = []
-        documents.each {|doc| h.concat(doc.keys).uniq!}
+        documents.slice(0,100).each {|doc| h.concat(doc.keys).uniq!}
         h
       end
 
