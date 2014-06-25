@@ -56,7 +56,7 @@ describe Icelastic::QuerySegment::Aggregation do
 
     context "date-histogram" do
 
-      {"hour" => "yyyy-MM-dd'T'hh:mm:ss'Z'", "day" => "yyyy-MM-dd", "month" => "yyyy-MM", "year" => "yyyy"}.each do |interval, format|
+      {"hour" => "yyyy-MM-dd'T'HH:mm:ss'Z'", "day" => "yyyy-MM-dd", "month" => "yyyy-MM", "year" => "yyyy"}.each do |interval, format|
 
         it "handle &date-#{interval}=<field>" do
           aggregation({"date-#{interval}" => "published"}).send(:date_aggregations).should == {
@@ -85,8 +85,8 @@ describe Icelastic::QuerySegment::Aggregation do
 
   context "statistics" do
 
-    it "handle dateStat-<interval>=<bucket-field>[<stat-field>|<stat-field>]" do
-      aggregation("date-day" => "positioned[latitude|longitude]").send(:date_aggregations).should == {
+    it "handle dateStat-<interval>=<bucket-field>[<stat-field>:<stat-field>]" do
+      aggregation("date-day" => "positioned[latitude:longitude]").send(:date_aggregations).should == {
         "day-positioned" => {
           "date_histogram" => {"field" => "positioned", "interval" => "day", "format" => "yyyy-MM-dd"},
           "aggs" => {
@@ -97,8 +97,8 @@ describe Icelastic::QuerySegment::Aggregation do
       }
     end
 
-    it "handle dateStat-<interval>=<bucket-field>[<stat-field>|<stat-field>],<bucket-field2>[<stat-field>]" do
-      aggregation("date-day" => "positioned[latitude|longitude],measured[depth]").send(:date_aggregations).should == {
+    it "handle dateStat-<interval>=<bucket-field>[<stat-field>:<stat-field>],<bucket-field2>[<stat-field>]" do
+      aggregation("date-day" => "positioned[latitude:longitude],measured[depth]").send(:date_aggregations).should == {
         "day-positioned" => {
           "date_histogram" => {"field" => "positioned", "interval" => "day", "format" => "yyyy-MM-dd"},
           "aggs" => {
@@ -115,8 +115,8 @@ describe Icelastic::QuerySegment::Aggregation do
       }
     end
 
-    it "handle dateStat-<interval>=<bucket-field>[<stat-field>|<stat-field>]&dateStat-<interval2>=<bucket-field>[<stat-field>|<stat-field>]" do
-      aggregation("date-day" => "positioned[latitude|longitude]","date-month" => "positioned[latitude|longitude]").send(:date_aggregations).should == {
+    it "handle dateStat-<interval>=<bucket-field>[<stat-field>:<stat-field>]&dateStat-<interval2>=<bucket-field>[<stat-field>:<stat-field>]" do
+      aggregation("date-day" => "positioned[latitude:longitude]","date-month" => "positioned[latitude:longitude]").send(:date_aggregations).should == {
         "day-positioned" => {
           "date_histogram" => {"field" => "positioned", "interval" => "day", "format" => "yyyy-MM-dd"},
           "aggs" => {
