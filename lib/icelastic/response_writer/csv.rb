@@ -20,10 +20,17 @@ module Icelastic
 
       private
 
+      # Document header
       def header
+        fields? ? field_headers : doc_headers
+      end
+
+      # Field keys
+      def keys
         fields? ? fields : doc_headers
       end
 
+      # Tries to generate a complete header from the json keys
       def doc_headers
         h = []
         documents.slice(0,100).each {|doc| h.concat(doc.keys).uniq!}
@@ -32,12 +39,17 @@ module Icelastic
 
       # True if there are user defined fields
       def fields?
-        params.any?{|k,v| k == "fields"}
+        params.keys.include?("fields")
       end
 
       # Returns an array with the specified fields
       def fields
-        params['fields'].split(',')
+        params['fields'].split(',').map{|f| f =~ /:/ ? f.split(":").last : f}
+      end
+
+      # @see Icelastic::QuerySegment::Paging.source_filter Depends on the source filter handling alias syntax
+      def field_headers
+        params['fields'].split(',').map{|f| f =~ /:/ ? f.split(":").first : f}
       end
 
       # Returns an array of arrays containing the column elements
@@ -45,7 +57,7 @@ module Icelastic
         docs = []
         documents.each do |doc|
           row = []
-          header.each_with_index {|field, i| row[i] = handle_sub_fields(field, doc)}
+          keys.each_with_index {|field, i| row[i] = handle_sub_fields(field, doc)}
           docs << row
         end
         docs

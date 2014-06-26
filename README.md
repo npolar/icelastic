@@ -124,6 +124,7 @@ And then execute:
 
   "?format=csv" # Return results as csv (Only basic support)
   "?format=csv&fields=<field1>" # For the best results with csv specify the fields you want in the results
+  "?format=csv&fields=<alias>:<field>" # Header fields can be renamed with an alias
 ```
 
 ## Contributing

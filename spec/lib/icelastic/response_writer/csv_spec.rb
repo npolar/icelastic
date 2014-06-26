@@ -94,6 +94,10 @@ describe Icelastic::ResponseWriter::Csv do
       writer("q=&fields=oarray.b").build.should include("null|v2|null")
     end
 
+    it "handle field aliases when fields=<alias>:<field>" do
+      writer("q=&fields=flag:label").build.should include("flag\ntext\ntext\ntext")
+    end
+
   end
 
 end

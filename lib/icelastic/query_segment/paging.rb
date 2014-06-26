@@ -57,7 +57,7 @@ module Icelastic
 
       # Return an array with the paramter values
       def source_filter(regex)
-        extract_params(regex).map{|k,v| v.split(",") }.flatten
+        extract_params(regex).map{|k,v| v.split(",").map{|f| f =~ /:/ ? f.split(":").last : f} }.flatten
       end
 
     end
