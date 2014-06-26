@@ -4,6 +4,8 @@ module Icelastic
 
       attr_accessor :env, :documents, :params
 
+      ALIAS_TOKEN = ":"
+
       def initialize(request, feed)
         self.env = request.env
         self.params = request.params
@@ -42,14 +44,23 @@ module Icelastic
         params.keys.include?("fields")
       end
 
-      # Returns an array with the specified fields
-      def fields
-        params['fields'].split(',').map{|f| f =~ /:/ ? f.split(":").last : f}
-      end
-
       # @see Icelastic::QuerySegment::Paging.source_filter Depends on the source filter handling alias syntax
       def field_headers
-        params['fields'].split(',').map{|f| f =~ /:/ ? f.split(":").first : f}
+        extract_field_arguments {|a, token| a.split(token).first}
+      end
+
+      # Returns an array with the specified fields
+      def fields
+        extract_field_arguments {|a, token| a.split(token).last}
+      end
+
+      # Can be used to perform an argument operation using the ALIAS_TOKEN.
+      # The block is used to specify an operation (in our case split). If
+      # the field can't be split into arguments it returns the field value.
+      # @see #field_headers
+      # @see #fields
+      def extract_field_arguments(&block)
+        params['fields'].split(',').map{|f| f =~ /#{ALIAS_TOKEN}/ ? block.call(f, ALIAS_TOKEN) : f }
       end
 
       # Returns an array of arrays containing the column elements
