@@ -6,4 +6,4 @@ rvm:
 branches:
   only:
     - master
-script: "bundle exec spec spec"
+script: "rspec"
