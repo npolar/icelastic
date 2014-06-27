@@ -22,7 +22,7 @@ In order to run the test suite you need to point Icelastic to your Elasticsearch
   export TEST_CLUSTER_COMMAND=/install_path/elasticsearch/bin/elasticsearch
 ```
 
-Or install a temporary Elasticsearch install for test purposes.
+Or install a temporary Elasticsearch install for test purposes. When using this setup you don't need to set the ENV variable.
 
 ```bash
   mkdir /tmp/elasticsearch \
