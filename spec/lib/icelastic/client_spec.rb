@@ -40,10 +40,6 @@ describe Icelastic::Client do
           @client = Icelastic::Client.new
         end
 
-        it "try localhost:9200 without arguments" do
-          @client.client.cluster.health.should_not be(nil)
-        end
-
         it "use default params when not overriden" do
           Icelastic::Default.params.should include("start" => 0, "limit" => 20)
         end
