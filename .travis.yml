@@ -11,5 +11,6 @@ env:
 install:
   - mkdir /tmp/elasticsearch
   - wget -O - https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-1.2.1.tar.gz | tar xz --directory=/tmp/elasticsearch/ --strip-components=1
+  - bundle install
 script:
   - bundle exec rspec
