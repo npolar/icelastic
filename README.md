@@ -1,6 +1,7 @@
 # Icelastic
 
 [![Code Climate](https://codeclimate.com/github/npolar/icelastic.png)](https://codeclimate.com/github/npolar/icelastic)
+[![Build Status](https://travis-ci.org/npolar/icelastic.svg?branch=master)](https://travis-ci.org/npolar/icelastic)
 
 ## Installation
 
@@ -11,6 +12,28 @@ Add this line to your application's Gemfile:
 And then execute:
 
     $ bundle
+
+## Tests
+
+### Dependencies
+In order to run the test suite you need to point Icelastic to your Elasticsearch install by setting the following ENV variable
+
+```bash
+  export TEST_CLUSTER_COMMAND=/install_path/elasticsearch/bin/elasticsearch
+```
+
+Or install a temporary Elasticsearch install for test purposes.
+
+```bash
+  mkdir /tmp/elasticsearch \
+  wget -O - https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-1.2.1.tar.gz | tar xz --directory=/tmp/elasticsearch/ --strip-components=1
+```
+
+### Run tests
+
+```bash
+  bundle exec rspec
+```
 
 ## Usage
 
