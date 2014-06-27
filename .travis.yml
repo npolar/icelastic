@@ -8,3 +8,5 @@ branches:
   only:
     - master
 script: "bundle exec rspec"
+services:
+  - elasticsearch
