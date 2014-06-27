@@ -4,7 +4,7 @@ describe Rack::Icelastic do
 
   def app
     Rack::Builder.new do |builder|
-      use Rack::Icelastic, :index => 'test', :type => 'rspec', :params => {:limit => 1}
+      use Rack::Icelastic, :url => "http://localhost:9350", :index => 'rspec', :type => 'spec', :params => {:limit => 1}
       run lambda{|env| [200, {"Content-Type" => "text/plain"}, ["passed"]]}
     end
   end
