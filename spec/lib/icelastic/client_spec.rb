@@ -14,9 +14,9 @@ describe Icelastic::Client do
 
     before(:each) do
       config = {
-        :url => "http://localhost:9200/",
-        :index => "test",
-        :type => "rspec",
+        :url => "http://localhost:9350/",
+        :index => "rspec",
+        :type => "spec",
         :log => false,
         :params => {
           :start => 1,
