@@ -7,6 +7,10 @@ rvm:
 branches:
   only:
     - master
-script: "bundle exec rspec"
-services:
-  - elasticsearch
+env:
+  - TEST_CLUSTER_COMMAND=/tmp/elasticsearch/bin/elasticsearch
+install:
+  - mkdir /tmp/elasticsearch
+  - wget -O - https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-1.2.1.tar.gz | tar xz --directory=/tmp/elasticsearch/ --strip-components=1
+script:
+  - "bundle exec rspec"
