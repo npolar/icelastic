@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = Icelastic::VERSION
   spec.authors       = ["RDux"]
   spec.email         = ["data@npolar.no"]
-  spec.description   = "Library that provides advanced elasticsearch query functionality in the url."
-  spec.summary       = "Exposes elasticsearch on the url using a Rack middleware for easy injection in server stack."
+  spec.description   = "Library that provides advanced Elasticsearch query functionality through the url."
+  spec.summary       = "Offers a set of query parameters that expose more advanced Elasticsearch functionality through the url. Provides a Rack middleware for easy usage in the server stack."
   spec.homepage      = "https://github.com/npolar/icelastic"
   spec.license       = "GPLv3"
 
