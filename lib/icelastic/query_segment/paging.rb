@@ -10,10 +10,10 @@ module Icelastic
 
     class Paging
 
-      START_REGEX = /start/i
-      LIMIT_REGEX = /limit/i
-      SORT_REGEX = /sort/i
-      FIELDS_REGEX = /fields/i
+      START_REGEX = /^start$/i
+      LIMIT_REGEX = /^limit$/i
+      SORT_REGEX = /^sort$/i
+      FIELDS_REGEX = /^fields$/i
 
       attr_accessor :params
 
