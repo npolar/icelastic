@@ -215,7 +215,7 @@ describe Icelastic::ResponseWriter::Feed do
 
         it "handle range" do
           f = feed( http_search("q=foo&rangefacet-temperature=1") ).facets
-          f["facets"].find {|i| i.member?("temperature")}["temperature"].first.should include("uri" => "http://example.org/endpoint?q=foo&rangefacet-temperature=1&filter-temperature=-31..-30")
+          f["facets"].find {|i| i.member?("temperature")}["temperature"].first.should include("uri" => "http://example.org/endpoint?q=foo&rangefacet-temperature=1&filter-temperature=-30..-29")
         end
 
       end
