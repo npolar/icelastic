@@ -68,7 +68,7 @@ describe Icelastic::QuerySegment::Filter do
         f = filter({"filter-foo" => "0..20"})
         f.build.should == {
           "and" => [
-            {"range" => {"foo" => {"gte" => 0.0, "lte" => 20.0}}}
+            {"range" => {"foo" => {"gte" => 0.0, "lt" => 20.0}}}
           ]
         }
       end
@@ -77,7 +77,7 @@ describe Icelastic::QuerySegment::Filter do
         f = filter({"filter-foo" => "-5..-2"})
         f.build.should == {
           "and" => [
-            {"range" => {"foo" => {"gte" => -5.0, "lte" => -2.0}}}
+            {"range" => {"foo" => {"gte" => -5.0, "lt" => -2.0}}}
           ]
         }
       end
@@ -104,7 +104,7 @@ describe Icelastic::QuerySegment::Filter do
         f = filter({"filter-foo" => "20..10"})
         f.build.should == {
           "and" => [
-            {"range" => {"foo" => {"gte" => 10.0, "lte" => 20.0}}}
+            {"range" => {"foo" => {"gte" => 10.0, "lt" => 20.0}}}
           ]
         }
       end
@@ -113,7 +113,7 @@ describe Icelastic::QuerySegment::Filter do
         f = filter({"filter-foo" => "2013-12-01T15:00:00Z..2013-08-01T12:00:00Z"})
         f.build.should == {
           "and" => [
-            {"range" => {"foo" => {"gte" => "2013-08-01T12:00:00Z", "lte" => "2013-12-01T15:00:00Z"}}}
+            {"range" => {"foo" => {"gte" => "2013-08-01T12:00:00Z", "lt" => "2013-12-01T15:00:00Z"}}}
           ]
         }
       end
@@ -136,7 +136,7 @@ describe Icelastic::QuerySegment::Filter do
         f.build.should == {
           "and" => [
             {
-              "not" => {"range" => {"foo" => {"gte" => 10.0, "lte" => 20.0}}}
+              "not" => {"range" => {"foo" => {"gte" => 10.0, "lt" => 20.0}}}
             }
           ]
         }
@@ -149,8 +149,8 @@ describe Icelastic::QuerySegment::Filter do
             {
               "not" => {
                 "or" => [
-                  {"range" => {"foo" => {"gte" => 10.0, "lte" => 20.0}}},
-                  {"range" => {"foo" => {"gte" => 40.0, "lte" => 60.0}}}
+                  {"range" => {"foo" => {"gte" => 10.0, "lt" => 20.0}}},
+                  {"range" => {"foo" => {"gte" => 40.0, "lt" => 60.0}}}
                 ]
               }
             }
@@ -171,7 +171,7 @@ describe Icelastic::QuerySegment::Filter do
                 ]
               }
             },
-            {"not" => {"range" => {"foo" => {"gte" => 60.0, "lte" => 90.0}}}}
+            {"not" => {"range" => {"foo" => {"gte" => 60.0, "lt" => 90.0}}}}
           ]
         }
       end

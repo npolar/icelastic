@@ -2,6 +2,7 @@
 ENV['RACK_ENV'] = 'test'
 
 require 'simplecov'
+require 'pry'
 
 SimpleCov.start do
   # Filters
@@ -30,7 +31,7 @@ end
 # start a test cluster
 Elasticsearch::Extensions::Test::Cluster.start \
   cluster_name: "icespec",
-  command:      ENV['TEST_CLUSTER_COMMAND'] ||= "/tmp/elasticsearch/bin/elasticsearch",
+  command:      ENV['ICELASTIC_ELASTICSEARCH_COMMAND'] ||= "tmp/elasticsearch/bin/elasticsearch",
   port:         9350,
   nodes:        1
 

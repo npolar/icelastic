@@ -1,3 +1,5 @@
+require_relative "aggregations/range"
+
 module Icelastic
   module QuerySegment
 
@@ -18,6 +20,7 @@ module Icelastic
 
       def initialize( params = {} )
         self.params = Icelastic::Default.params.merge(params)
+        @range = Icelastic::QuerySegment::RangeAggregation.new
       end
 
       def build
@@ -26,6 +29,7 @@ module Icelastic
           aggs["aggregations"].merge!(term_aggregations)  if extract_params(TERM_REGEX)
           aggs["aggregations"].merge!(labeled_aggregations) if extract_params(LABELED_REGEX)
           aggs["aggregations"].merge!(date_aggregations) if extract_params(DATE_REGEX)
+          aggs["aggregations"].merge!(@range.build_aggregations(params))
           aggs
         end
       end

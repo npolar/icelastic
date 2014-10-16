@@ -84,7 +84,7 @@ module Icelastic
 
         {
           "range" => {
-            filter_field(key) => {"gte" => arg1, "lte" => arg2}
+            filter_field(key) => {"gte" => arg1, "lt" => arg2}
           }
         }
       end
