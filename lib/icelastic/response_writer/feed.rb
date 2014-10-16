@@ -63,7 +63,8 @@ module Icelastic
         {
           "search" => {
             "qtime" => qtime,
-            "q" => query_term
+            "q" => query_term,
+            "max_score" => max_score
           }
         }
       end
@@ -124,12 +125,13 @@ module Icelastic
       # Construct an entry object from the raw elastic result
       def format_hits
         body_hash['hits']['hits'].map{|e|
+          hit = e['_source']
           if e['highlight']
             hl = {"highlight" => e['highlight']['_all'].join("... ")}
-            e['_source'].merge(hl)
-          else
-            e['_source']
+            hit.merge!(hl)
           end
+          hit["_score"] = e["_score"]
+          hit
         }
       end
 
@@ -303,6 +305,10 @@ module Icelastic
 
       def query_term
         params.each{|k,v| return v if k =~ /^q(-.+)?/}
+      end
+
+      def max_score
+        body_hash["hits"]["max_score"]
       end
 
       # Returns a query string build from a parameter hash.

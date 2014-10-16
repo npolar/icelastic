@@ -11,8 +11,8 @@ describe Icelastic::ResponseWriter::Feed do
         "total"=>40,
         "max_score"=>0.7834767,
         "hits"=> [
-          {"_source"=> {"title"=>"test1"}, "highlight" => {"_all" => ["<em><strong>est</strong></em>"]}},
-          {"_source"=> {"title"=>"test2"}}
+          {"_score" => 1, "_source"=> {"title"=>"test1"}, "highlight" => {"_all" => ["<em><strong>est</strong></em>"]}},
+          {"_score" => 1, "_source"=> {"title"=>"test2"}}
         ]
       },
       "aggregations" => {
@@ -116,6 +116,11 @@ describe Icelastic::ResponseWriter::Feed do
       f.should == "foobar"
     end
 
+    it "return max_score" do
+      f = feed(http_search("q=")).send(:search)
+      puts f
+      expect(f["search"]["max_score"]).to eq(0.7834767)
+    end
   end
 
   context "facets" do
@@ -213,13 +218,14 @@ describe Icelastic::ResponseWriter::Feed do
           f["facets"][4]["year-created"].first.should include("uri" => "http://example.org/endpoint?q=foo&date-year=created&filter-created=2008-01-01T00:00:00Z..2009-01-01T00:00:00Z")
         end
 
+      end
+
+      context "rangefacets" do
         it "handle range" do
           f = feed( http_search("q=foo&rangefacet-temperature=1") ).facets
           f["facets"].find {|i| i.member?("temperature")}["temperature"].first.should include("uri" => "http://example.org/endpoint?q=foo&rangefacet-temperature=1&filter-temperature=-30..-29")
         end
-
       end
-
     end
 
   end
@@ -239,6 +245,11 @@ describe Icelastic::ResponseWriter::Feed do
     it "return aggregated buckets when doing statistics" do
       f = feed( http_search("q=&date-day=measured[tempearture|pressure]") ).stats
       f["stats"].first.should include("filter" => "day-measured")
+    end
+
+    it "return _score" do
+      f = feed( http_search("q=foo") ).entries
+      expect(f["entries"].first).to have_key("_score")
     end
 
   end
