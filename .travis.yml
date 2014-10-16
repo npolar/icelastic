@@ -12,6 +12,6 @@ install:
   - mkdir /tmp/elasticsearch
   - wget -O - https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-1.2.1.tar.gz | tar xz --directory=/tmp/elasticsearch/ --strip-components=1
   - cp -r scripts /tmp/elasticsearch
-  - bundle install --without development
+  - bundle install
 script:
   - bundle exec rspec
