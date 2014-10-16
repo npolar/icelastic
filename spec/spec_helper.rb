@@ -2,7 +2,6 @@
 ENV['RACK_ENV'] = 'test'
 
 require 'simplecov'
-require 'pry'
 
 SimpleCov.start do
   # Filters
