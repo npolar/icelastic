@@ -18,6 +18,8 @@ module Icelastic
 
       attr_accessor :params, :env, :body_hash, :aggregations
 
+      RANGE_REGEX = Icelastic::QuerySegment::RangeAggregation::REGEX
+
       def initialize(request, body_hash)
         self.env = request.env
         self.params = request_params(request)
@@ -94,7 +96,10 @@ module Icelastic
       end
 
       def facets?
-        params.keys.any?{|key| key.match(/^facets|facet-(.+)|date-(.+)$/i)} && (params["facets"] != "false")
+        params.keys.any? do |key|
+          key.match(/^facets|facet-(.+)|date-(.+)|rangefacet-(.+)$/i) &&
+          (params["facets"] != "false")
+        end
       end
 
       def format_aggregations
@@ -133,12 +138,21 @@ module Icelastic
       end
 
       def parse_buckets(facet, buckets)
-        buckets.map do |term|
+        buckets.map do |bucket|
+          term = facet_term(bucket)
           {
-            "term" => facet_term(term),
-            "count" => term["doc_count"],
-            "uri" => build_facet_uri(facet, facet_term(term))
+            "term" => format_term(facet, term),
+            "count" => bucket["doc_count"],
+            "uri" => build_facet_uri(facet, term)
           }
+        end
+      end
+
+      def format_term(field, term)
+        if params.has_key?("rangefacet-#{field}")
+          step_range(params["rangefacet-#{field}"].to_i, term)
+        else
+      	   term
         end
       end
 
@@ -158,6 +172,8 @@ module Icelastic
       def build_facet_query(field, term)
         if field =~ /^(year|month|day|hour)-(.+)/i
           "#{facet_query($2, time_range($1, term))}" # Handle date facets
+        elsif params.has_key?("rangefacet-#{field}")
+          "#{facet_query(field, step_range(params["rangefacet-#{field}"].to_i, term))}"
         else
           f = params.has_key?("facet-#{field}") ? params["facet-#{field}"] : field # Handle named facets
           "#{facet_query(f, term)}"
@@ -203,6 +219,10 @@ module Icelastic
         stop = next_time(DateTime.parse(date), interval)
 
         "#{start}..#{stop}"
+      end
+
+      def step_range(step, start)
+        "#{start}..#{start + step}"
       end
 
       # calculate the next time based of a start and interval
@@ -288,7 +308,14 @@ module Icelastic
       # Returns a query string build from a parameter hash.
       def query_from_params(p = params)
         p = p.reject{|k, v| Icelastic::Default.params[k] == v if Icelastic::Default.params[k]}
-        p.map{|k,v| "#{k}=#{v.to_s.gsub(/\s/, "+")}"}.join('&')
+        query_string = p.map do |k, v|
+          if v.respond_to?(:reduce) # value is a hash
+            v.reduce(k) {|memo, obj| memo+"["+obj[0]+"]="+obj[1].to_s.gsub(/\s/, "+")}
+          else
+            "#{k}=#{v.to_s.gsub(/\s/, "+")}"
+          end
+        end
+        query_string.join("&")
       end
 
     end

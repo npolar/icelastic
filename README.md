@@ -13,6 +13,9 @@ And then execute:
 
     $ bundle
 
+### Custom scripts
+Rangefacets require that you copy `scripts/range.groovy` to your elasticsearch config (`/install_path/elasticsearch/`)  
+[Elasticsearch Scripting](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/modules-scripting.html)
 ## Tests
 
 ### Dependencies
@@ -25,8 +28,8 @@ In order to run the test suite you need to point Icelastic to your Elasticsearch
 Or install a temporary Elasticsearch install for test purposes. When using this setup you don't need to set the ENV variable.
 
 ```bash
-  mkdir /tmp/elasticsearch \
-  wget -O - https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-1.2.1.tar.gz | tar xz --directory=/tmp/elasticsearch/ --strip-components=1
+  mkdir tmp/elasticsearch \
+  wget -O - https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-1.2.1.tar.gz | tar xz --directory=tmp/elasticsearch/ --strip-components=1
 ```
 
 ### Run tests
@@ -134,6 +137,8 @@ Or install a temporary Elasticsearch install for test purposes. When using this 
 
 ```ruby
   "?date-<interval>=<field>[<field1>:<field2>]" # Specify a temporal aggregation
+
+  "?rangefacet-<field>=<interval>" # Range facet with interval
 ```
 
 #### Output Format

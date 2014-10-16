@@ -22,7 +22,7 @@ describe Icelastic::ResponseWriter::Feed do
         "month-created" => {"buckets" => [{"key_as_string" => "2008-07","key" => 1215561600000,"doc_count" => 24}]},
         "year-created" => {"buckets" => [{"key_as_string" => "2008","key" => 1215561600000,"doc_count" => 24}]},
         "day-measured" => {"buckets" => [{"key_as_string" => "2014-02-22T06:00:00Z","key" => 1393092000000}]},
-        "temperature[5]" => {"buckets" => [{"key" => -30,"doc_count" => 241}]}
+        "temperature" => {"buckets" => [{"key" => -30,"doc_count" => 241}]}
       }
     }
   end
@@ -211,6 +211,11 @@ describe Icelastic::ResponseWriter::Feed do
         it "handle year interval" do
           f = feed( http_search("q=foo&date-year=created") ).facets
           f["facets"][4]["year-created"].first.should include("uri" => "http://example.org/endpoint?q=foo&date-year=created&filter-created=2008-01-01T00:00:00Z..2009-01-01T00:00:00Z")
+        end
+
+        it "handle range" do
+          f = feed( http_search("q=foo&rangefacet-temperature=1") ).facets
+          f["facets"].find {|i| i.member?("temperature")}["temperature"].first.should include("uri" => "http://example.org/endpoint?q=foo&rangefacet-temperature=1&filter-temperature=-30..-29")
         end
 
       end
