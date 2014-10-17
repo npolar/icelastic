@@ -60,13 +60,16 @@ module Icelastic
       end
 
       def search
-        {
+        search  = {
           "search" => {
             "qtime" => qtime,
-            "q" => query_term,
-            "max_score" => max_score
+            "q" => query_term
           }
         }
+        if (params.has_key?("score"))
+          search["search"]["max_score"] = max_score
+        end
+        search
       end
 
       def facets
@@ -130,7 +133,9 @@ module Icelastic
             hl = {"highlight" => e['highlight']['_all'].join("... ")}
             hit.merge!(hl)
           end
-          hit["_score"] = e["_score"]
+          if params.has_key?("score")
+            hit["_score"] = e["_score"]
+          end
           hit
         }
       end

@@ -116,10 +116,17 @@ describe Icelastic::ResponseWriter::Feed do
       f.should == "foobar"
     end
 
-    it "return max_score" do
-      f = feed(http_search("q=")).send(:search)
-      puts f
-      expect(f["search"]["max_score"]).to eq(0.7834767)
+    context "when score parameter is in query" do
+      it "return max_score" do
+        f = feed(http_search("q=&score")).send(:search)
+        expect(f["search"]["max_score"]).to eq(0.7834767)
+      end
+    end
+    context "when score parameter is not in query" do
+      it "not return max_score" do
+        f = feed(http_search("q=")).send(:search)
+        expect(f["search"]).not_to have_key("max_score")
+      end
     end
   end
 
@@ -220,7 +227,7 @@ describe Icelastic::ResponseWriter::Feed do
 
       end
 
-      context "rangefacets" do
+      context "when rangefacets is in query" do
         it "handle range" do
           f = feed( http_search("q=foo&rangefacet-temperature=1") ).facets
           f["facets"].find {|i| i.member?("temperature")}["temperature"].first.should include("uri" => "http://example.org/endpoint?q=foo&rangefacet-temperature=1&filter-temperature=-30..-29")
@@ -247,9 +254,17 @@ describe Icelastic::ResponseWriter::Feed do
       f["stats"].first.should include("filter" => "day-measured")
     end
 
-    it "return _score" do
-      f = feed( http_search("q=foo") ).entries
-      expect(f["entries"].first).to have_key("_score")
+    context "when score parameter is in query" do
+      it "return scores" do
+        f = feed( http_search("q=foo&score") ).entries
+        expect(f["entries"].first).to have_key("_score")
+      end
+    end
+    context "when score parameter is not in query" do
+      it "not return max_score" do
+        f = feed( http_search("q=foo") ).entries
+        expect(f["entries"].first).not_to have_key("_score")
+      end
     end
 
   end
