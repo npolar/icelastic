@@ -154,6 +154,11 @@ Or install a temporary Elasticsearch install for test purposes. When using this 
   "?format=csv&fields=<field1>" # For the best results with csv specify the fields you want in the results
   "?format=csv&fields=<alias>:<field>" # Header fields can be renamed with an alias
 ```
+#### Scoring
+
+```ruby
+  "?score" # Include relevance scoring in result
+```
 
 ## Contributing
 

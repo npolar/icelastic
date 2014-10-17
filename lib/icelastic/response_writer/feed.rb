@@ -60,12 +60,16 @@ module Icelastic
       end
 
       def search
-        {
+        search  = {
           "search" => {
             "qtime" => qtime,
             "q" => query_term
           }
         }
+        if (params.has_key?("score"))
+          search["search"]["max_score"] = max_score
+        end
+        search
       end
 
       def facets
@@ -124,12 +128,15 @@ module Icelastic
       # Construct an entry object from the raw elastic result
       def format_hits
         body_hash['hits']['hits'].map{|e|
+          hit = e['_source']
           if e['highlight']
             hl = {"highlight" => e['highlight']['_all'].join("... ")}
-            e['_source'].merge(hl)
-          else
-            e['_source']
+            hit.merge!(hl)
           end
+          if params.has_key?("score")
+            hit["_score"] = e["_score"]
+          end
+          hit
         }
       end
 
@@ -303,6 +310,10 @@ module Icelastic
 
       def query_term
         params.each{|k,v| return v if k =~ /^q(-.+)?/}
+      end
+
+      def max_score
+        body_hash["hits"]["max_score"]
       end
 
       # Returns a query string build from a parameter hash.
