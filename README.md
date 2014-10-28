@@ -1,114 +1,82 @@
 # Icelastic
+[Rack](http://rack.github.io/) middleware that provides [Cool URIs](http://www.w3.org/Provider/Style/URI.html) for Elasticsearch.
+Used in production at the Norwegian Polar Institute [API](http://api.npolar.no)s.
 
-[![Code Climate](https://codeclimate.com/github/npolar/icelastic.png)](https://codeclimate.com/github/npolar/icelastic)
-[![Build Status](https://travis-ci.org/npolar/icelastic.svg?branch=master)](https://travis-ci.org/npolar/icelastic)
+### Features
+* [Searching](http://api.npolar.no/dataset/?q=glacier) ?q=
+* [Filtering](http://api.npolar.no/oceanography/?q=&filter-collection=cast&filter-station=77) filter-{variable}=value 
+* [Faceting](http://api.npolar.no/oceanography/?q=&facets=collection,station,sea_water_temperature) facets={variable[,varible2]}
+* [Range-faceting](http://api.npolar.no/oceanography/?q=&rangefacet-sea_water_temperature=10,&rangefacet-latitude=10) (aka. bucketing) 
 
-## Installation
+#### Multiple formats
+The default Icelastic response format is a [JSON feed]() modeled after Atom/[OpenSearch](http://www.opensearch.org/Specifications/OpenSearch/1.1#Example_of_OpenSearch_response_elements_in_Atom_1.0).
 
-Add this line to your application's Gemfile:
+* [JSON](http://api.npolar.no/dataset/?q=&format=json) format=json
+* [CSV](http://api.npolar.no/tracking/deployment/?q=&format=csv&fields=deployed,platform,vendor,terminated) format=csv
+* [GeoJSON](http://api.npolar.no/expedition/track/?q=&filter-code=IPY-Traverse-0709&format=geojson&fields=altitude,measured,latitude,longitude) format=geojson
+* JSON array - format=json&variant=array
+* HAL - format=json&variant=hal
+* raw - format=raw
 
-    gem 'icelastic', :git => "git://github.com/npolar/icelastic.git"
+## Use
+### Simple
+```ruby
+# config.ru
+require 'icelastic'
 
-And then execute:
+use Rack::Icelastic, {
+  :url => "http://localhost:9200", :index => "example", :type => "test" }
+}
 
-    $ bundle
-
-### Custom scripts
-Rangefacets require that you copy `scripts/range.groovy` to your elasticsearch config (`/install_path/elasticsearch/`)  
-[Elasticsearch Scripting](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/modules-scripting.html)
-## Tests
-
-### Dependencies
-In order to run the test suite you need to point Icelastic to your Elasticsearch install by setting the following ENV variable
-
-```bash
-  export TEST_CLUSTER_COMMAND=/install_path/elasticsearch/bin/elasticsearch
 ```
+### Advanced
 
-Or install a temporary Elasticsearch install for test purposes. When using this setup you don't need to set the ENV variable.
-
-```bash
-  mkdir tmp/elasticsearch \
-  wget -O - https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-1.2.1.tar.gz | tar xz --directory=tmp/elasticsearch/ --strip-components=1
-```
-
-### Run tests
-
-```bash
-  bundle exec rspec
-```
-
-## Usage
-
-### Middleware
+Example of injecting a custom [CDL](https://www.unidata.ucar.edu/software/netcdf/docs/netcdf.html#CDL-Syntax) response writer,
+and setting various configuraton options
 
 ```ruby
+writers = Icelastic::Default.writers
+writers << {"format" => "cdl", "writer" => My::ElasticsearchCDLWriter, "from" => "elasticsearch", "type" => "text/plain"}
 
-    require 'icelastic'
-
-    use Rack::Icelastic, {
-      :url => "http://localhost:9200",
-      :index => "example",
-      :type => "test",
-      :log => false, # Enables logging in elasticsearch-ruby
-      :params => {
-        "facets" => "topics,tags", # Fields to facet
-        "date-month" => "created,updated", # Date facets with a month interval
-        "start" => 0, # Start of result page
-        "limit" => 20, # Items per page
-        "size-facet" => 5 # Number of facet items
-      }
-    }
-
+use ::Rack::Icelastic, {
+  :url => "http://localhost:9200",
+  :index => "oceanography",
+  :log => false, # Logging in elasticsearch-ruby ?
+  :type => "point",
+  :params => {
+    "facets" => "station,cruise,ctd,collection,mooring,serialnumber",
+    "date-year" => "measured", # Date facets with a year interval
+    "limit" => 10, # Items per page
+    "size-facet" => 100 # Number of facet items
+  },
+  :writers => writers
+}
 ```
 
-### App
-
-```ruby
-
-    require 'icelastic'
-
-    run Rack::Icelastic.new nil, {
-      :url => "http://localhost:9200",
-      :index => "example",
-      :type => "test",
-      :log => false, # Enables logging in elasticsearch-ruby
-      :params => {
-        "facets" => "topics,tags", # Fields to facet
-        "date-year" => "created,updated", # Date facets with a year interval
-        "start" => 0, # Start of result page
-        "limit" => 10, # Items per page
-        "size-facet" => 25 # Number of facet items
-      }
-    }
-
-```
-
-## URL query parameter overview
-
-#### Simple Queries
-
-```ruby
+### URI reference
+#### Search
+```json
   "?q=<value>" # Regular query
   "?q-<field>=<value>" # Field query
   "?q-<field1>,<field2>=<value>" # Multi-field query
 ```
 
-#### Paging & Fields
+#### Global parameters (paging, sorting, limiting, scoring)
 
 ```ruby
   "?start=10" # Results are shown from the 10th row
   "?limit=50" # Show 50 rows per result page
-  "?limit=all" # Use the all keyword to retrieve all search results (Very heavy and slow on large collections. Use with care!!!)
+
 
   "?sort=<field>" # Sort ascending on field
   "?sort=-<field>" # Sort descending on field
 
   "?fields=<field1>,<field2>,<field3>" # Only show fields 1,2,3 in the response rows
   "?highlight=true" # Enable term highlighting. Injects a highlight key with the relevant sections into the entry
+  "?score" # Include relevance scoring in result
 ```
 
-#### Filtered Queries
+#### Filtering
 
 ```ruby
   "?filter-<field>=<value>" # Basic filter
@@ -117,12 +85,12 @@ Or install a temporary Elasticsearch install for test purposes. When using this 
   "?filter-<field>=<value1>|<value2>" # OR filter
   "?not-<field>=<value>" # NOT filter (starts with not instead of filter)
 
-  "?filter-<field>=<value1>..<value2>" # Ranged filter
-  "?filter-<field>=<value>.." # Ranged filter (greater or equal then)
-  "?filter-<field>=..<value>" # Ranged filter (less or equal then)
+  "?filter-<field>=<value1>..<value2>" # Range filter
+  "?filter-<field>=<value>.." # Range filter (greater or equal then)
+  "?filter-<field>=..<value>" # Range filter (less or equal then)
 ```
 
-#### Facets
+#### Faceting
 
 ```ruby
   "?facets=<field1>,<field2>" # Facet on field1 and field2
@@ -137,14 +105,14 @@ Or install a temporary Elasticsearch install for test purposes. When using this 
 
 ```ruby
   "?date-<interval>=<field>[<field1>:<field2>]" # Specify a temporal aggregation
-
+  
   "?rangefacet-<field>=<interval>" # Range facet with interval
 ```
 
-#### Output Format
+#### Formats
 
 ```ruby
-  "?format=raw" # Returns the  raw elasticsearch response (application/json)
+  "?format=raw" # Returns the raw elasticsearch response (application/json)
 
   "?format=geojson" # Return a GeoJSON featureCollection containing point features
   "?format=geojson&geometry=linestring" # Return a GeoJSON featureCollection containing a linestring feature
@@ -154,10 +122,33 @@ Or install a temporary Elasticsearch install for test purposes. When using this 
   "?format=csv&fields=<field1>" # For the best results with csv specify the fields you want in the results
   "?format=csv&fields=<alias>:<field>" # Header fields can be renamed with an alias
 ```
-#### Scoring
 
-```ruby
-  "?score" # Include relevance scoring in result
+## Installation
+
+Add this line to your application's Gemfile:
+
+    gem 'icelastic', :git => "git://github.com/npolar/icelastic.git"
+
+And then execute:
+
+    $ bundle
+
+
+Rangefaceting requires copying `scripts/range.groovy` to your elasticsearch scripts folder, ie. `elasticsearch/config/scripts/range.groovy`.
+See also: [Elasticsearch Scripting](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/modules-scripting.html)
+
+### Testing
+
+The tests need a real Elasticsearch server to run
+
+```sh
+  export ICELASTIC_ELASTICSEARCH_COMMAND=tmp/elasticsearch/bin/elasticsearch
+  mkdir -p tmp/elasticsearch && wget -O - https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-1.3.4.tar.gz | tar xz --directory=tmp/elasticsearch/ --strip-components=1
+```
+Run tests
+
+```sh
+  bundle exec rspec
 ```
 
 ## Contributing
@@ -167,3 +158,5 @@ Or install a temporary Elasticsearch install for test purposes. When using this 
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create new Pull Request
+
+[![Code Climate](https://codeclimate.com/github/npolar/icelastic.png)](https://codeclimate.com/github/npolar/icelastic) [![Build Status](https://travis-ci.org/npolar/icelastic.svg?branch=master)](https://travis-ci.org/npolar/icelastic) [rubydoc](http://www.rubydoc.info/github/npolar/icelastic/master/file/README.md)
