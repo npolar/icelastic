@@ -41,7 +41,7 @@ describe Icelastic::Client do
         end
 
         it "use default params when not overriden" do
-          Icelastic::Default.params.should include("start" => 0, "limit" => 20)
+          Icelastic::Default.params.should include("start" => 0, "limit" => 100)
         end
 
       end
