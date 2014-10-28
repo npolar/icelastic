@@ -56,14 +56,14 @@ describe Icelastic::ResponseWriter::Feed do
       expect(feed.build.keys.first).to eq("feed")
     end
     
-    exp = ["entries", "facets", "list", "opensearch", "search"].sort
+    exp = ["entries", "facets", "list", "opensearch", "search", "stats"].sort
     it "feed keys are #{exp.join(',')}" do
-      expect(feed["feed"].keys.sort).to eq(exp)
+      expect(feed.build["feed"].keys.sort).to eq(exp)
     end
     
     it "yields a block" do
       expect( feed.build {|feed|
-        [feed.class.name] + feed["feed"]["entries"].map {|e| e["title"] } }).to eq(["Icelastic::ResponseWriter::Feed", "test1","test2"])
+        [feed.class.name] + feed.entries.map {|e| e["title"] } }).to eq(["Icelastic::ResponseWriter::Feed", "test1","test2"])
     end
   
     context "opensearch" do
