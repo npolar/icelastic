@@ -27,7 +27,7 @@ module Icelastic
       end
 
       # construct the feed response
-      def build(key=nil, &block)
+      def build(&block)
         
         if params["variant"] == "array"
           return entries
@@ -41,29 +41,25 @@ module Icelastic
         }
         
         if params["variant"] == "atom"
-          response["feed"]["links"] = links
-        elsif params["variant"] =~ /^(list|legacy|)$/
+         
+        if params["variant"] =~ /^(list|legacy|)$/
           response["feed"]["list"] = list_links
-        end
-        
-        if stats?
-          response["feed"]["stats"] = stats
         else
-          response["feed"]["entries"] = entries
+          response["feed"]["links"] = links
         end
-                
-        if facets?
-          response["feed"]["facets"] = facets
-        end
+
+        response["feed"]["stats"] = stats
+        response["feed"]["entries"] = entries
+        response["feed"]["facets"] = facets        
         
         # This works, but then format=json&variant=geojson might differ from format=geojson
         #if params["variant"] == "geojson"
         #  return Icelastic::ResponseWriter::GeoJSON.new(Rack::Request.new(env), response).build
         #end
         
-        if not key.nil? and response.key? key.to_s
-          response = response[key.to_s]
-        end
+        #if not key.nil? and response.key? key.to_s
+        #  response = response[key.to_s]
+        #end
         
         if block_given?
           yield(self)
@@ -71,7 +67,6 @@ module Icelastic
           response
         end
       end
-      alias :[] :build
       
       def opensearch
         {
