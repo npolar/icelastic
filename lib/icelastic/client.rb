@@ -28,22 +28,32 @@ module Icelastic
     end
 
     # Execute a search and return the appropriate response
-    
     def search(request)
       self.env = request.env
       self.response = client.search({:body => query, :index => search_index, :type => type})
       
-      result = case request_params['format']
+      format = request_params['format']
+      
+      result = case format
         when "raw" then response
-        when "json","",nil then  write("json", "elasticsearch")
-        else write(request_params['format'], "feed")
+        when "json","",nil then write("json", from("json"))
+        else write(format, from(format))
       end
       if result.is_a? Hash or result.is_a? Array
         result.to_json
       else
         result
       end
-      
+    end
+    
+    def writers=(writers)
+      @writers = writers
+    end
+    
+    protected
+    
+    def from(format)
+      writer(format)["from"]
     end
     
     def writer(format)
@@ -53,12 +63,6 @@ module Icelastic
       end
       w.first
     end
-    
-    def writers=(writers)
-      @writers = writers
-    end
-    
-    private
 
     # Grab the document count for the index
     def count
@@ -66,25 +70,15 @@ module Icelastic
       r['count']
     end
 
-    # Write JSON feed
-    def feed
-      write("json", "elasticsearch")
-    end
-
     # Call the response writer
     def write(format, from)
       writer = writer(format)["writer"]
-      from = (from == "feed") ? feed : response
+      from = (from == "feed") ? write("json", "elasticsearch") : response
       if writer.respond_to? :call
         writer.call(from)
       else
         writer.new(Rack::Request.new(generate_env), from).build
       end
-    end
-
-    # Write GeoJSON
-    def geojson
-      write("geojson", "feed")
     end
 
     # Generate a new environement. Needed to merge in the new limit param when limit=all is called
@@ -104,10 +98,6 @@ module Icelastic
 
     def query
       Icelastic::Query.new(Icelastic::Default.params.merge(request_params)).build
-    end
-
-    def result
-
     end
 
     def request_params
