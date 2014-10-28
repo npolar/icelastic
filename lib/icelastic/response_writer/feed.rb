@@ -39,9 +39,6 @@ module Icelastic
           { "opensearch" => opensearch,
           "search" => search }
         }
-        
-        if params["variant"] == "atom"
-         
         if params["variant"] =~ /^(list|legacy|)$/
           response["feed"]["list"] = list_links
         else
