@@ -358,6 +358,9 @@ module Icelastic
       end
       
       def last_uri
+        if limit.to_i == 0
+          return first_uri
+        end
         last = limit*(total_results/limit).ceil
         uri_with_default_parameters(last)
       end
