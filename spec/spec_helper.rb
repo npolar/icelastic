@@ -38,3 +38,10 @@ Elasticsearch::Extensions::Test::Cluster.start \
 Elasticsearch::Client.new( url: "http://localhost:9350" ).index index: 'rspec', type: 'spec', id: 1, body: { title: 'IceSpec' }
 
 at_exit{ Elasticsearch::Extensions::Test::Cluster.stop port: 9350 }
+
+# Equivalent URI matcher
+RSpec::Matchers.define :eq_uri do |uri|
+  match do |actual|
+    URI.parse(actual).normalize! == URI.parse(uri).normalize!
+  end
+end
