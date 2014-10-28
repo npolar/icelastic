@@ -3,8 +3,9 @@ module Icelastic
 
     DEFAULT_PARAMS = {
       "start" => 0,
-      "limit" => 20,
-      "size-facet" => 15,
+      "limit" => 100,
+      "size-facet" => 10,
+      "variant" => "legacy"
     }
 
     GEO_PARAMS = {
@@ -27,6 +28,13 @@ module Icelastic
 
     def self.geo_params=(params)
       @gp = GEO_PARAMS.merge(params)
+    end
+    
+    def self.writers
+      [ {"format" => "json", "writer" => ResponseWriter::Feed, "from" => "elasticsearch", "type" => "application/json"},
+        {"format" => "csv", "writer" => ResponseWriter::Csv, "from" => "feed", "type" => "text/plain"},
+        {"format" => "geojson", "writer" => ResponseWriter::GeoJSON, "from" => "feed", "type" => "application/json"}
+      ]
     end
 
   end
