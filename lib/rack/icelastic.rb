@@ -32,7 +32,7 @@ module Rack
       
       body = client.search(request)
       # @todo How do you get the real HTTP status from elasticsearch-ruby?
-      [200, {"Content-Type" => "#{type(format)}; charset=utf-8"}, [body]] 
+      [200, {"Content-Type" => "#{type}; charset=utf-8"}, [body]] 
     end
 
     protected
@@ -41,20 +41,20 @@ module Rack
       Rack::Request.new(env)
     end
     
-    def type(format)
-      if format == "raw"
-        return "application/json"
-      end
-      
-      types = @config[:writers].select {|w| w["format"] == format }
-      if types.none?
-        raise "No media type defined for format: #{format}"  
-      end
-      types.first["type"]
+    def type
+      format =~ /^(json|raw)$/ ? "application/json" : writer.type 
     end
     
     def format
-      params.key?("format") ? params["format"][0] : "json"
+      (params.key?("format") and params["format"][0] != "") ? params["format"][0] : "json"
+    end
+    
+    def writer
+      writers = @config[:writers].select {|w| w.format == format }
+      if writers.none? or writers.size > 1
+        raise "#{writers.size} writers defined for format: #{format}"
+      end
+      writers[0]
     end
 
     def client

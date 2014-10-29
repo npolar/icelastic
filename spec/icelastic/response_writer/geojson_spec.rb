@@ -52,31 +52,31 @@ describe Icelastic::ResponseWriter::GeoJSON do
 
     it "return a feed header" do
       g = geojson(http_search("q=&format=geojson")).build
-      g.should include('"feed":{}')
+      g.should have_key("feed")
     end
 
     it "return a FeatureCollection" do
       g = geojson(http_search("q=&format=geojson")).build
-      g.should include('"type":"FeatureCollection"')
+      g.should have_key("FeatureCollection")
     end
 
     it "return a Point feature by default" do
       g = geojson(http_search("q=&format=geojson")).build
-      g.should include('"geometry":{"type":"Point"')
+      g["features"].map {|f|}.should have_key("geometry") # => {"type" => "Point"}})
     end
 
     it "generate a point when geometry=point" do
       g = geojson(http_search("q=&format=geojson&geometry=point")).build
-      g.should include('"geometry":{"type":"Point"')
+      g["features"].map {|f|}.should have_key("geometry") #{"type":"Point"')
     end
 
     it "return a LineString feature when &geometry=linestring" do
-      g = geojson(http_search("q=&format=geojson&geometry=linestring")).build
+      g = geojson(http_search("q=&format=geojson&geometry=linestring")).build.to_json
       g.should include('"geometry":{"type":"LineString"')
     end
 
     it "return a MultiPoint feature when &geometry=multipoint" do
-      g = geojson(http_search("q=&format=geojson&geometry=MultiPoint")).build
+      g = geojson(http_search("q=&format=geojson&geometry=MultiPoint")).build.to_json
       g.should include('"geometry":{"type":"MultiPoint"')
     end
 
@@ -85,7 +85,7 @@ describe Icelastic::ResponseWriter::GeoJSON do
   context "stats" do
 
     it "should use the avg position" do
-      g = geojson(http_search("q=&format=geojson")).build
+      g = geojson(http_search("q=&format=geojson")).build.to_json
       g.should include('"coordinates":[18,69]')
     end
 

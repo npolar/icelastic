@@ -32,13 +32,8 @@ module Icelastic
       self.env = request.env
       self.response = client.search({:body => query, :index => search_index, :type => type})
       
-      format = request_params['format']
+      result = write
       
-      result = case format
-        when "raw" then response
-        when "json","",nil then write("json", from("json"))
-        else write(format, from(format))
-      end
       if result.is_a? Hash or result.is_a? Array
         result.to_json
       else
@@ -51,15 +46,24 @@ module Icelastic
     end
     
     protected
-    
-    def from(format)
-      writer(format)["from"]
+     
+    def from
+      if writer.respond_to? :from
+        responseclass = @writers.first {|w| w == writer.from  }
+        responseclass.new(Rack::Request.new(generate_env), response).build
+      else
+        response
+      end
     end
     
-    def writer(format)
-      w = @writers.select {|w| w["format"] == format.to_s}
+    def format
+      (request_params.key? "format" and request_params["format"] != "") ? request_params["format"] : "json"
+    end
+    
+    def writer
+      w = @writers.select {|w| w.format == format.to_s}
       if w.none?
-        raise "No writer for format: #{format}, available writers: #{@writers.to_json}"
+        raise "No writer for \"#{format}\" format, available writers: #{@writers.to_json}"
       end
       w.first
     end
@@ -71,14 +75,14 @@ module Icelastic
     end
 
     # Call the response writer
-    def write(format, from)
-      writer = writer(format)["writer"]
-      from = (from == "feed") ? write("json", "elasticsearch") : response
-      if writer.respond_to? :call
-        writer.call(from)
+    def write
+      if "raw" == format
+        response
       else
         writer.new(Rack::Request.new(generate_env), from).build
       end
+      
+      
     end
 
     # Generate a new environement. Needed to merge in the new limit param when limit=all is called

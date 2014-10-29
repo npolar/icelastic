@@ -1,43 +1,7 @@
-require 'spec_helper'
+require "feed_helper"
 
 describe Icelastic::ResponseWriter::Feed do
-
-  QUERY_STRING = "q=&limit=100&start=0&facets=tags,temperature"
-
-  def elastic_response_hash
-    {
-      "took"=>34,
-      "timed_out"=>false,
-      "_shards"=>{"total"=>8, "successful"=>8, "failed"=>0},
-      "hits"=> {
-        "total"=>40,
-        "max_score"=>0.7834767,
-        "hits"=> [
-          {"_score" => 1, "_source"=> {"title"=>"test1"}, "highlight" => {"_all" => ["<em><strong>est</strong></em>"]}},
-          {"_score" => 1, "_source"=> {"title"=>"test2"}}
-        ]
-      },
-      "aggregations" => {
-        "tags" => {"buckets" => [{"key" => "foo","doc_count" => 88}, {"key" => "foo bar","doc_count" => 88}]},
-        "hour-created" => {"buckets" => [{"key_as_string" => "2008-07-09","key" => 1215561600000,"doc_count" => 24}]},
-        "day-created" => {"buckets" => [{"key_as_string" => "2008-07-09","key" => 1215561600000,"doc_count" => 24}]},
-        "month-created" => {"buckets" => [{"key_as_string" => "2008-07","key" => 1215561600000,"doc_count" => 24}]},
-        "year-created" => {"buckets" => [{"key_as_string" => "2008","key" => 1215561600000,"doc_count" => 24}]},
-        "day-measured" => {"buckets" => [{"key_as_string" => "2014-02-22T06:00:00Z","key" => 1393092000000}]},
-        "temperature" => {"buckets" => [{"key" => -30,"doc_count" => 241}]}
-      }
-    }
-  end
-
-  def mock_search_request(query=QUERY_STRING)
-    Rack::Request.new(
-      Rack::MockRequest.env_for(
-        "/endpoint", "HTTP_HOST" => "example.org", "REQUEST_PATH" => "/endpoint",
-        "QUERY_STRING" => "#{query}"
-      )
-    )
-  end
-
+  
   def feed_factory(request=nil, r = elastic_response_hash)
     if request.nil? or request.is_a? String
       request = mock_search_request(request)
@@ -45,7 +9,9 @@ describe Icelastic::ResponseWriter::Feed do
     Icelastic::Default.params = Icelastic::Default::DEFAULT_PARAMS # Reset the defaults from the client
     Icelastic::ResponseWriter::Feed.new(request, r)
   end
-  
+
+  QUERY_STRING = "q=&limit=100&start=0&facets=tags,temperature"
+
   describe "#build" do
   
     subject(:query_string) {QUERY_STRING}
@@ -126,27 +92,6 @@ describe Icelastic::ResponseWriter::Feed do
         expect(feed.build).to eq([{"title"=>"test1", "highlight"=>"<em><strong>est</strong></em>"}, {"title"=>"test2"}])
       end
       
-    end
-
-    context "hal" do
-      
-      subject(:hal) { feed_factory("q=&format=json&variant=hal").build }
-      
-      it do
-        expect(hal).to have_key("_links")
-      end
-      
-      it do
-        expect(hal).to have_key("_embedded")
-      end
-      
-      it "\"self\" link" do
-        expect(hal["_links"]["self"]).to eq({"href"=>"http://example.org/endpoint?variant=hal&q=&format=json"})
-      end
-      
-      it "_embedded resources" do
-        expect(hal["_embedded"]).to eq([{"title"=>"test1", "highlight"=>"<em><strong>est</strong></em>", "_links"=>[]}, {"title"=>"test2", "_links"=>[]}])
-      end      
     end
     
     context "atom" do

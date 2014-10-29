@@ -31,10 +31,7 @@ module Icelastic
     end
     
     def self.writers
-      [ {"format" => "json", "writer" => ResponseWriter::Feed, "from" => "elasticsearch", "type" => "application/json"},
-        {"format" => "csv", "writer" => ResponseWriter::Csv, "from" => "feed", "type" => "text/plain"},
-        {"format" => "geojson", "writer" => ResponseWriter::GeoJSON, "from" => "feed", "type" => "application/json"}
-      ]
+      [ ResponseWriter::Feed, ResponseWriter::Csv, ResponseWriter::GeoJSON ]
     end
 
   end
