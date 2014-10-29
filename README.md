@@ -1,21 +1,22 @@
 # Icelastic
-[Rack](http://rack.github.io/) middleware that provides [Cool URIs](http://www.w3.org/Provider/Style/URI.html) for Elasticsearch.
-Used in production at the Norwegian Polar Institute [API](http://api.npolar.no)s.
+[Rack](http://rack.github.io/) middleware that provides [Cool URIs](http://www.w3.org/Provider/Style/URI.html) for Elasticsearch-based web services.
 
-### Features
-* [Searching](http://api.npolar.no/dataset/?q=glacier) ?q=
+## Features
+### Real-world examples
+Icelastic is used in production at the Norwegian Polar Institute [API](http://api.npolar.no)s, below are some real-world example queries
+* [Searching](http://api.npolar.no/dataset/?q=glacier) **?q=**
 * [Filtering](http://api.npolar.no/oceanography/?q=&filter-collection=cast&filter-station=77) filter-{variable}=value 
 * [Faceting](http://api.npolar.no/oceanography/?q=&facets=collection,station,sea_water_temperature) facets={variable[,varible2]}
 * [Range-faceting](http://api.npolar.no/oceanography/?q=&rangefacet-sea_water_temperature=10,&rangefacet-latitude=10) (aka. bucketing) 
 
-#### Multiple formats
+### Multiple response formats 
 The default Icelastic response format is a [JSON feed]() modeled after Atom/[OpenSearch](http://www.opensearch.org/Specifications/OpenSearch/1.1#Example_of_OpenSearch_response_elements_in_Atom_1.0).
 
 * [JSON](http://api.npolar.no/dataset/?q=&format=json) format=json
 * [CSV](http://api.npolar.no/tracking/deployment/?q=&format=csv&fields=deployed,platform,vendor,terminated) format=csv
 * [GeoJSON](http://api.npolar.no/expedition/track/?q=&filter-code=IPY-Traverse-0709&format=geojson&fields=altitude,measured,latitude,longitude) format=geojson
 * JSON array - format=json&variant=array
-* HAL - format=json&variant=hal
+* HAL - format=hal
 * raw - format=raw
 
 ## Use
@@ -31,12 +32,12 @@ use Rack::Icelastic, {
 ```
 ### Advanced
 
-Example of injecting a custom [CDL](https://www.unidata.ucar.edu/software/netcdf/docs/netcdf.html#CDL-Syntax) response writer,
+Example of injecting a custom [CDL](https://www.unidata.ucar.edu/software/netcdf/docs/index.html) response writer,
 and setting various configuraton options
 
 ```ruby
 writers = Icelastic::Default.writers
-writers << {"format" => "cdl", "writer" => My::ElasticsearchCDLWriter, "from" => "elasticsearch", "type" => "text/plain"}
+writers << My::ElasticsearchCDLWriter
 
 use ::Rack::Icelastic, {
   :url => "http://localhost:9200",
@@ -51,6 +52,30 @@ use ::Rack::Icelastic, {
   },
   :writers => writers
 }
+```
+
+```ruby
+
+module My
+  class ElasticsearchCDLWriter
+    
+    def self.format
+      "cdl"
+    end
+    
+    def self.type
+      "text/plain"
+    end
+    
+    def initialize(request, elasticsearch_response_hash)
+      @feed = Icelastic::ResponseWriter::Feed.new(request, elasticsearch_response_hash)
+    end
+          
+    def build
+      @feed.build do |feed|
+        # build response here
+      end
+    end
 ```
 
 ### URI reference
