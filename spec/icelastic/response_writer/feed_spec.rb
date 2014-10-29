@@ -4,7 +4,7 @@ describe Icelastic::ResponseWriter::Feed do
   
   def feed_factory(request=nil, r = elastic_response_hash)
     if request.nil? or request.is_a? String
-      request = mock_search_request(request)
+      request = mock_request(request)
     end
     Icelastic::Default.params = Icelastic::Default::DEFAULT_PARAMS # Reset the defaults from the client
     Icelastic::ResponseWriter::Feed.new(request, r)
@@ -16,7 +16,7 @@ describe Icelastic::ResponseWriter::Feed do
   
     subject(:query_string) {QUERY_STRING}
     
-    subject(:feed) { feed_factory(mock_search_request(query_string)) }
+    subject(:feed) { feed_factory(mock_request(query_string)) }
     
     it "returns a feed Hash" do
       expect(feed.build.keys.first).to eq("feed")
@@ -49,12 +49,12 @@ describe Icelastic::ResponseWriter::Feed do
 
     context "#search" do
       it "return query time" do
-        f = feed_factory( mock_search_request("q=") ).send(:qtime)
+        f = feed_factory( mock_request("q=") ).send(:qtime)
         f.should == 34
       end
   
       it "return query" do
-        f = feed_factory( mock_search_request("q=foobar") ).send(:query_term)
+        f = feed_factory( mock_request("q=foobar") ).send(:query_term)
         f.should == "foobar"
       end
     
@@ -72,7 +72,7 @@ describe Icelastic::ResponseWriter::Feed do
       end
       context "no score parameter" do
         it "no max_score" do
-          feed = feed_factory(mock_search_request("q="))
+          feed = feed_factory(mock_request("q="))
           expect(feed.search).not_to have_key("max_score")
         end
       end  
@@ -153,7 +153,7 @@ describe Icelastic::ResponseWriter::Feed do
 
   describe "#entries" do
     
-    subject(:entries) { feed_factory(mock_search_request("q=foo")).entries }
+    subject(:entries) { feed_factory(mock_request("q=foo")).entries }
 
     it "returns array corresponding to the _source array" do
       expect(entries.map {|e|e["title"]} ).to eq(["test1", "test2"])
@@ -161,7 +161,7 @@ describe Icelastic::ResponseWriter::Feed do
     
     # FIXME _highlight
     it "return highlighted segments with the entry" do
-      f = feed_factory( mock_search_request("q=foo") )
+      f = feed_factory( mock_request("q=foo") )
       f.entries.first.should include("highlight" =>"<em><strong>est</strong></em>")
     end
 
@@ -209,54 +209,54 @@ describe Icelastic::ResponseWriter::Feed do
       end
       
       it "string formatted term when date" do
-        f = feed_factory( mock_search_request("q=foo&date-day=created") )
+        f = feed_factory( mock_request("q=foo&date-day=created") )
         f.facets[2]["day-created"].first.should include("term" => "2008-07-09")
       end
 
       it "return count" do
-        f = feed_factory( mock_search_request("q=foo&facets=tags") )
+        f = feed_factory( mock_request("q=foo&facets=tags") )
         f.facets[0]["tags"].first.should include("count" => 88)
       end
 
       it "generate filtered facet term uri" do
-        f = feed_factory( mock_search_request("q=foo&facets=tags&filter-tags=bar") )
+        f = feed_factory( mock_request("q=foo&facets=tags&filter-tags=bar") )
         f.facets[0]["tags"].first.should include("uri" => "http://example.org/endpoint?q=foo&facets=tags&filter-tags=bar,foo")
       end
 
       it "replace space with + in uri" do
-        f = feed_factory( mock_search_request("q=foo&facets=tags") )
+        f = feed_factory( mock_request("q=foo&facets=tags") )
         f.facets[0]["tags"].last.should include("uri" => "http://example.org/endpoint?q=foo&facets=tags&filter-tags=foo+bar")
       end
 
       it "generate unfiltered facet term uri" do
-        f = feed_factory( mock_search_request("q=foo&facets=tags&filter-tags=foo,bar") )
+        f = feed_factory( mock_request("q=foo&facets=tags&filter-tags=foo,bar") )
         f.facets[0]["tags"].first.should include("uri" => "http://example.org/endpoint?q=foo&facets=tags&filter-tags=bar")
       end
 
       it "use named facet term in uri" do
-        f = feed_factory( mock_search_request("q=foo&facet-keywords=tags") )
+        f = feed_factory( mock_request("q=foo&facet-keywords=tags") )
         f.facets[0]["tags"].first.should include("uri" => "http://example.org/endpoint?q=foo&facet-keywords=tags&filter-tags=foo")
       end
 
       context "temporal facets" do
 
         it "handle hour interval" do
-          f = feed_factory( mock_search_request("q=foo&date-hour=created") ).facets
+          f = feed_factory( mock_request("q=foo&date-hour=created") ).facets
           f[1]["hour-created"].first.should include("uri" => "http://example.org/endpoint?q=foo&date-hour=created&filter-created=2008-07-09T00:00:00Z..2008-07-09T01:00:00Z")
         end
 
         it "handle day interval" do
-          f = feed_factory( mock_search_request("q=foo&date-day=created") ).facets
+          f = feed_factory( mock_request("q=foo&date-day=created") ).facets
           f[2]["day-created"].first.should include("uri" => "http://example.org/endpoint?q=foo&date-day=created&filter-created=2008-07-09T00:00:00Z..2008-07-10T00:00:00Z")
         end
 
         it "handle month interval" do
-          f = feed_factory( mock_search_request("q=foo&date-month=created") ).facets
+          f = feed_factory( mock_request("q=foo&date-month=created") ).facets
           f[3]["month-created"].first.should include("uri" => "http://example.org/endpoint?q=foo&date-month=created&filter-created=2008-07-01T00:00:00Z..2008-08-01T00:00:00Z")
         end
 
         it "handle year interval" do
-          f = feed_factory( mock_search_request("q=foo&date-year=created") ).facets
+          f = feed_factory( mock_request("q=foo&date-year=created") ).facets
           f[4]["year-created"].first.should include("uri" => "http://example.org/endpoint?q=foo&date-year=created&filter-created=2008-01-01T00:00:00Z..2009-01-01T00:00:00Z")
         end
 
@@ -264,7 +264,7 @@ describe Icelastic::ResponseWriter::Feed do
 
       context "when rangefacets is in query" do
         it "handle range" do
-          f = feed_factory( mock_search_request("q=foo&rangefacet-temperature=1") ).facets
+          f = feed_factory( mock_request("q=foo&rangefacet-temperature=1") ).facets
           f.find {|i| i.member?("temperature")}["temperature"].first.should include("uri" => "http://example.org/endpoint?q=foo&rangefacet-temperature=1&filter-temperature=-30..-29")
         end
       end
