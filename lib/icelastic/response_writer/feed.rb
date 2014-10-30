@@ -311,16 +311,16 @@ module Icelastic
 
       # Returns the uri for the current request
       def self_uri
-        "#{base}?#{query_from_params}"
+        uri_with_default_parameters(start)
       end
 
       # Build the uri for the next page
       def next_uri
-        total_results <= ((start + limit) || limit) ? false : uri_with_default_parameters(start+limit)
+        total_results <= ((start + limit) || limit) ? false : uri_without_default_parameters(start+limit)
       end
       
       def first_uri
-        uri_with_default_parameters(0)
+        uri_without_default_parameters(0)
       end
       
       def last_uri
@@ -328,13 +328,13 @@ module Icelastic
           return first_uri
         end
         last = limit*(total_results/limit).ceil
-        uri_with_default_parameters(last)
+        uri_without_default_parameters(last)
       end
 
       # Build the uri for the previous page
       def previous_uri
         return false if start == 0
-        start - limit >= 0 ? uri_with_default_parameters(start - limit) : first_uri
+        start - limit >= 0 ? uri_without_default_parameters(start - limit) : first_uri
       end
 
       # Construct a page uri with the specified start index
@@ -342,6 +342,7 @@ module Icelastic
         p = params.merge({"start" => start})
         "#{base}?#{query_from_params(p, true)}"
       end
+      alias :uri_without_default_parameters :page_uri
       
       def uri_with_default_parameters(offset=0)
         p = params.merge({"start" => offset})
@@ -378,7 +379,6 @@ module Icelastic
         if true === reject_default
           p = p.reject{|k, v| Icelastic::Default.params[k] == v if Icelastic::Default.params[k]}
         end
-        
         
         query_string = p.map do |k, v|
           if v.respond_to?(:reduce) # value is a hash
