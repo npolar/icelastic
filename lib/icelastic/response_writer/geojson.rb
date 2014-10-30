@@ -22,7 +22,20 @@ module Icelastic
 
       attr_accessor :feed, :stats, :entries, :params
 
+      def self.format  
+        "geojson"
+      end
+      
+      def self.type
+        "application/vnd.geo+json"
+      end
+      
+      def self.from
+        ResponseWriter::Feed
+      end
+      
       def initialize(request, feed)
+        #raise feed.#
         self.params = request.params
         self.entries = feed["feed"]["entries"]
         self.stats = feed["feed"]["stats"]
@@ -34,8 +47,10 @@ module Icelastic
           "feed" => feed,
           "type" => "FeatureCollection",
           "features" => select_mode
-        }.to_json
+        }
       end
+      
+
 
       private
 

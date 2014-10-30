@@ -22,18 +22,51 @@ module Icelastic
       self.type = config[:type] if config.has_key?(:type)
       self.log = config.has_key?(:log) ? config[:log] : false
       self.client = url.nil? ? Elasticsearch::Client.new(:log => log) : Elasticsearch::Client.new(:url => url, :log => log)
-      Icelastic::Default.params = hash_key_to_s(config[:params]) if config.has_key?(:params) && !config[:params].nil?
-      Icelastic::Default.geo_params = hash_key_to_s(config[:geojson]) if config.has_key?(:geojson) && !config[:geojson].nil?
+      self.writers = config[:writers] ||= Default.writers
+      Default.params = hash_key_to_s(config[:params]) if config.has_key?(:params) && !config[:params].nil?
+      Default.geo_params = hash_key_to_s(config[:geojson]) if config.has_key?(:geojson) && !config[:geojson].nil?
     end
 
-    # Execute a search operation
+    # Execute a search and return the appropriate response
     def search(request)
       self.env = request.env
       self.response = client.search({:body => query, :index => search_index, :type => type})
-      result
+      
+      result = write
+      
+      if result.is_a? Hash or result.is_a? Array
+        result.to_json
+      else
+        result
+      end
     end
-
-    private
+    
+    def writers=(writers)
+      @writers = writers
+    end
+    
+    protected
+     
+    def from
+      if writer.respond_to? :from
+        responseclass = @writers.first {|w| w == writer.from  }
+        responseclass.new(Rack::Request.new(generate_env), response).build
+      else
+        response
+      end
+    end
+    
+    def format
+      (request_params.key? "format" and request_params["format"] != "") ? request_params["format"] : "json"
+    end
+    
+    def writer
+      w = @writers.select {|w| w.format == format.to_s}
+      if w.none?
+        raise "No writer for \"#{format}\" format, available writers: #{@writers.to_json}"
+      end
+      w.first
+    end
 
     # Grab the document count for the index
     def count
@@ -41,19 +74,15 @@ module Icelastic
       r['count']
     end
 
-    # Generate CSV
-    def csv
-      Icelastic::ResponseWriter::Csv.new(Rack::Request.new(env), feed).build
-    end
-
-    # Call the feed response writer
-    def feed
-      Icelastic::ResponseWriter::Feed.new(Rack::Request.new(generate_env), response).build
-    end
-
-    # Call the Geojson response writer
-    def geojson
-      Icelastic::ResponseWriter::GeoJSON.new(Rack::Request.new(env), feed).build
+    # Call the response writer
+    def write
+      if "raw" == format
+        response
+      else
+        writer.new(Rack::Request.new(generate_env), from).build
+      end
+      
+      
     end
 
     # Generate a new environement. Needed to merge in the new limit param when limit=all is called
@@ -73,15 +102,6 @@ module Icelastic
 
     def query
       Icelastic::Query.new(Icelastic::Default.params.merge(request_params)).build
-    end
-
-    def result
-      case request_params['format']
-      when "raw" then response.to_json
-      when "csv" then csv
-      when "geojson" then geojson
-      else feed.to_json
-      end
     end
 
     def request_params

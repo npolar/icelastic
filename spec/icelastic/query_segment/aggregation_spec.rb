@@ -23,13 +23,13 @@ describe Icelastic::QuerySegment::Aggregation do
     context "term" do
 
       it "handle &facets=<field>" do
-        aggregation({"facets" => "topics"}).send(:term_aggregations).should == {"topics" => {"terms" => {"field" => "topics", "size" => 15}}}
+        aggregation({"facets" => "topics"}).send(:term_aggregations).should == {"topics" => {"terms" => {"field" => "topics", "size" => 10}}}
       end
 
       it "handle &facets=<field1>,<field2>" do
         aggregation({"facets" => "topics,sets"}).send(:term_aggregations).should == {
-          "topics" => {"terms" => {"field" => "topics", "size" => 15}},
-          "sets" => {"terms" => {"field" => "sets", "size" => 15}}
+          "topics" => {"terms" => {"field" => "topics", "size" => 10}},
+          "sets" => {"terms" => {"field" => "sets", "size" => 10}}
         }
       end
 
@@ -38,7 +38,7 @@ describe Icelastic::QuerySegment::Aggregation do
     context "labeled" do
 
       it "handle &facet-my+label=<field>" do
-        aggregation({"facet-a label" => "topic"}).send(:labeled_aggregations).should == {"a label" => {"terms" => {"field" => "topic", "size" => 15}}}
+        aggregation({"facet-a label" => "topic"}).send(:labeled_aggregations).should == {"a label" => {"terms" => {"field" => "topic", "size" => 10}}}
       end
 
     end
