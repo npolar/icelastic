@@ -24,7 +24,7 @@ module Icelastic
           
           # "edit" links
           edit_links = feed.entries.select {|e| e.key?("links")}.map {|e|
-            e["links"].first {|link| link["rel"] == "edit"}
+            e["links"].select {|link| link["rel"] == "edit"}.first
           }
           if edit_links.any?
             _links = _links.merge hal_links_array(edit_links, "edit")
