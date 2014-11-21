@@ -5,7 +5,7 @@ branches:
   only:
     - master
 env:
-  - ICELASTIC_ELASTICSEARCH_COMMAND=/tmp/elasticsearch/bin/elasticsearch:CODECLIMATE_REPO_TOKEN=a7015dadf03b5cd162523528bec8f4c1c9de7e62d0e339e76e4dfbf77c4d4d81 bundle exec rake
+  - ICELASTIC_ELASTICSEARCH_COMMAND=/tmp/elasticsearch/bin/elasticsearch;CODECLIMATE_REPO_TOKEN=a7015dadf03b5cd162523528bec8f4c1c9de7e62d0e339e76e4dfbf77c4d4d81 bundle exec rake
 before_install:
   - mkdir /tmp/elasticsearch
   - wget -O - https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-1.2.1.tar.gz | tar xz --directory=/tmp/elasticsearch/ --strip-components=1
