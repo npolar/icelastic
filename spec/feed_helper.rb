@@ -29,7 +29,7 @@ def elastic_response_hash
       "month-created" => {"buckets" => [{"key_as_string" => "2008-07","key" => 1215561600000,"doc_count" => 24}]},
       "year-created" => {"buckets" => [{"key_as_string" => "2008","key" => 1215561600000,"doc_count" => 24}]},
       "day-measured" => {"buckets" => [{"key_as_string" => "2014-02-22T06:00:00Z","key" => 1393092000000}]},
-      "temperature" => {"buckets" => [{"key" => -30,"doc_count" => 241}]}
+      "temperature" => {"buckets" => [{"key" => -30.0,"doc_count" => 241}]}
     }
   }
 end

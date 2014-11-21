@@ -1,5 +1,4 @@
 require "feed_helper"
-require "spec_helper"
 
 describe Icelastic::ResponseWriter::Feed do
 

@@ -73,9 +73,11 @@ module My
           
     def build
       @feed.build do |feed|
-        # build response here
+        "netcdf {}" # build response here
       end
     end
+  end
+end
 ```
 
 ### URI reference

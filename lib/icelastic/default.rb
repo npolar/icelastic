@@ -31,7 +31,7 @@ module Icelastic
     end
     
     def self.writers
-      [ ResponseWriter::Feed, ResponseWriter::Csv, ResponseWriter::GeoJSON ]
+      [ ResponseWriter::Feed, ResponseWriter::Csv, ResponseWriter::GeoJSON, ResponseWriter::HAL ]
     end
 
   end
