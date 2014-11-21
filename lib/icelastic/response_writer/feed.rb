@@ -181,7 +181,7 @@ module Icelastic
 
       def format_term(field, term)
         if params.has_key?("rangefacet-#{field}")
-          step_range(params["rangefacet-#{field}"].to_i, term)
+          step_range(params["rangefacet-#{field}"], term)
         else
       	  term
         end
@@ -253,7 +253,7 @@ module Icelastic
       end
 
       def step_range(step, start)
-        "#{start}..#{start + step}"
+        "#{start.to_i}..#{start.to_i + step.to_i}"
       end
 
       # calculate the next time based of a start and interval
