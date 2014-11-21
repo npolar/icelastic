@@ -188,4 +188,4 @@ Run tests
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create new Pull Request
 
-[![Code Climate](https://codeclimate.com/github/npolar/icelastic.png)](https://codeclimate.com/github/npolar/icelastic) [![Build Status](https://travis-ci.org/npolar/icelastic.svg?branch=master)](https://travis-ci.org/npolar/icelastic) [rubydoc](http://www.rubydoc.info/github/npolar/icelastic/master/file/README.md)
+[rubydoc](http://www.rubydoc.info/github/npolar/icelastic/master/file/README.md)
