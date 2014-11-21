@@ -1,3 +1,6 @@
+require "codeclimate-test-reporter"
+CodeClimate::TestReporter.start
+
 # Test environment
 ENV['RACK_ENV'] = 'test'
 
