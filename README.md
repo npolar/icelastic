@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/npolar/icelastic.svg?branch=master)](https://travis-ci.org/npolar/icelastic)
+
 # Icelastic
 [Rack](http://rack.github.io/) middleware that provides [Cool URIs](http://www.w3.org/Provider/Style/URI.html) for Elasticsearch-based web services.
 
