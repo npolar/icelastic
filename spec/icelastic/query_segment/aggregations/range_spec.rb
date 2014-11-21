@@ -3,11 +3,11 @@ require "spec_helper"
 describe Icelastic::QuerySegment::RangeAggregation do
   let(:rangeAggregation) { Icelastic::QuerySegment::RangeAggregation.new }
 
-  def range(params)
-    rangeAggregation.build_aggregations(Icelastic::Default.params.merge(params))
+  def range(params, size = nil)
+    rangeAggregation.build_aggregations(Icelastic::Default.params.merge(params), size)
   end
 
-  def expected(field, interval)
+  def expected(field, interval, size = nil)
     {
       field => {
         "terms" => {
@@ -17,7 +17,8 @@ describe Icelastic::QuerySegment::RangeAggregation do
             "interval" => interval
           },
           "order" => { "_term" => "asc" },
-          "lang" => "groovy"
+          "lang" => "groovy",
+          "size" => size
         }
       }
     }
@@ -46,6 +47,13 @@ describe Icelastic::QuerySegment::RangeAggregation do
       "rangefacet-salinity" => 2})
 
     expect(result).to eq(expected("temperature", 1).merge(expected("salinity", 2)))
+
+  end
+
+  it "does apply facet size if given" do
+    result = range({"rangefacet-temperature" => 1}, 20)
+
+    expect(result["temperature"]["terms"]["size"]).to eq(20)
 
   end
 end
