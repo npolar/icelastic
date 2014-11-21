@@ -3,10 +3,48 @@ require "spec_helper"
 
 describe Icelastic::ResponseWriter::Feed do
 
+<<<<<<< HEAD
   def feed_factory(request=nil, r = elastic_response_hash)
     if request.nil? or request.is_a? String
       request = mock_request(request)
     end
+=======
+  def response
+    {
+      "took"=>34,
+      "timed_out"=>false,
+      "_shards"=>{"total"=>8, "successful"=>8, "failed"=>0},
+      "hits"=> {
+        "total"=>40,
+        "max_score"=>0.7834767,
+        "hits"=> [
+          {"_score" => 1, "_source"=> {"title"=>"test1"}, "highlight" => {"_all" => ["<em><strong>est</strong></em>"]}},
+          {"_score" => 1, "_source"=> {"title"=>"test2"}}
+        ]
+      },
+      "aggregations" => {
+        "tags" => {"buckets" => [{"key" => "foo","doc_count" => 88}, {"key" => "foo bar","doc_count" => 88}]},
+        "hour-created" => {"buckets" => [{"key_as_string" => "2008-07-09","key" => 1215561600000,"doc_count" => 24}]},
+        "day-created" => {"buckets" => [{"key_as_string" => "2008-07-09","key" => 1215561600000,"doc_count" => 24}]},
+        "month-created" => {"buckets" => [{"key_as_string" => "2008-07","key" => 1215561600000,"doc_count" => 24}]},
+        "year-created" => {"buckets" => [{"key_as_string" => "2008","key" => 1215561600000,"doc_count" => 24}]},
+        "day-measured" => {"buckets" => [{"key_as_string" => "2014-02-22T06:00:00Z","key" => 1393092000000}]},
+        "temperature" => {"buckets" => [{"key" => -30.0,"doc_count" => 241}]}
+      }
+    }
+  end
+
+  def http_search(query)
+    Rack::Request.new(
+      Rack::MockRequest.env_for(
+        "/endpoint", "HTTP_HOST" => "example.org", "REQUEST_PATH" => "/endpoint",
+        "QUERY_STRING" => "#{query}"
+      )
+    )
+  end
+
+  def feed(request, r = response)
+>>>>>>> branch 'int_ranges' of git@github.com:npolar/icelastic.git
     Icelastic::Default.params = Icelastic::Default::DEFAULT_PARAMS # Reset the defaults from the client
     Icelastic::ResponseWriter::Feed.new(request, r)
   end
@@ -272,6 +310,11 @@ describe Icelastic::ResponseWriter::Feed do
         it "returns terms with ints" do
           f = feed_factory( mock_request("q=foo&rangefacet-temperature=1") ).facets
           f.find {|i| i.member?("temperature")}["temperature"].first.should include("term" => "-30..-29")
+        end
+
+        it "returns terms with ints" do
+          f = feed( http_search("q=foo&rangefacet-temperature=1") ).facets
+          f["facets"].find {|i| i.member?("temperature")}["temperature"].first.should include("term" => "-30..-29")
         end
       end
     end
