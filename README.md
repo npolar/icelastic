@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/npolar/icelastic.svg?branch=master)](https://travis-ci.org/npolar/icelastic) [![Code Climate](https://codeclimate.com/github/npolar/icelastic/badges/gpa.svg)](https://codeclimate.com/github/npolar/icelastic)
+[![Build Status](https://travis-ci.org/npolar/icelastic.svg?branch=master)](https://travis-ci.org/npolar/icelastic) [![Code Climate](https://codeclimate.com/github/npolar/icelastic/badges/gpa.svg)](https://codeclimate.com/github/npolar/icelastic) [![Test Coverage](https://codeclimate.com/github/npolar/icelastic/badges/coverage.svg)](https://codeclimate.com/github/npolar/icelastic)
 
 # Icelastic
 [Rack](http://rack.github.io/) middleware that provides [Cool URIs](http://www.w3.org/Provider/Style/URI.html) for Elasticsearch-based web services.
