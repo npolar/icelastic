@@ -3,11 +3,11 @@ require "spec_helper"
 describe Icelastic::QuerySegment::RangeAggregation do
   let(:rangeAggregation) { Icelastic::QuerySegment::RangeAggregation.new }
 
-  def range(params, size)
+  def range(params, size = nil)
     rangeAggregation.build_aggregations(Icelastic::Default.params.merge(params), size)
   end
 
-  def expected(field, interval)
+  def expected(field, interval, size = nil)
     {
       field => {
         "terms" => {
@@ -17,7 +17,8 @@ describe Icelastic::QuerySegment::RangeAggregation do
             "interval" => interval
           },
           "order" => { "_term" => "asc" },
-          "lang" => "groovy"
+          "lang" => "groovy",
+          "size" => size
         }
       }
     }
