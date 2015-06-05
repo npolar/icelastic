@@ -20,7 +20,7 @@ module Icelastic
 
     class GeoJSON
 
-      attr_accessor :feed, :stats, :entries, :params
+      attr_accessor :feed, :stats, :facets, :entries, :params
 
       def self.format  
         "geojson"
@@ -38,16 +38,27 @@ module Icelastic
         #raise feed.#
         self.params = request.params
         self.entries = feed["feed"]["entries"]
+        self.facets = feed["feed"]["facets"]
         self.stats = feed["feed"]["stats"]
         self.feed = feed["feed"].delete_if{|k| ["entries", "facets", "stats"].include?(k) }
       end
 
       def build
-        {
-          "feed" => feed,
+        fc = {
           "type" => "FeatureCollection",
-          "features" => select_mode
+          "features" => features
         }
+        if params.key? "variant" and params["variant"] == "atom"
+          fc["feed"] = feed
+        end
+        if params.key? "facets"
+          fc["facets"] = facets
+        end
+        if params.key? "stats"
+          fc["stats"] = stats
+        end
+        fc
+        
       end
       
 
@@ -145,6 +156,11 @@ module Icelastic
       def lng_key
         defaults["longitude"]
       end
+      
+      
+      def feature? test
+        test.key? "properties" and test.key? "geometry" and test.key? "type" and test["type"] == "Feature"
+      end
 
       # Extract latitude from the object
       def latitude(obj)
@@ -162,12 +178,15 @@ module Icelastic
       end
 
       # Trigger the correct generator depending on the mode
-      def select_mode
-        case mode
-        when /LineString/i then stats ? generate_multi_feature(stats, "LineString") : generate_multi_feature(entries, "LineString")
-        when /MultiPoint/i then stats ? generate_multi_feature(stats, "MultiPoint") : generate_multi_feature(entries, "MultiPoint")
-        #when /ContextLine/i then stats ? generate_contextline(stats) : generate_contextline
-        else stats ? generate_points(stats) : generate_points
+      def features
+        if entries.size > 0 and feature?(entries[0])
+          entries
+        else case mode
+          when /LineString/i then stats ? generate_multi_feature(stats, "LineString") : generate_multi_feature(entries, "LineString")
+          when /MultiPoint/i then stats ? generate_multi_feature(stats, "MultiPoint") : generate_multi_feature(entries, "MultiPoint")
+          #when /ContextLine/i then stats ? generate_contextline(stats) : generate_contextline
+          else stats ? generate_points(stats) : generate_points
+          end
         end
       end
 

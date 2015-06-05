@@ -50,9 +50,9 @@ describe Icelastic::ResponseWriter::GeoJSON do
 
   context "normal" do
 
-    it "return a feed header" do
+    it "not return a feed header" do
       g = geojson(mock_request("q=&format=geojson")).build
-      g.should have_key("feed")
+      g.should_not have_key("feed")
     end
 
     it "type = FeatureCollection" do
