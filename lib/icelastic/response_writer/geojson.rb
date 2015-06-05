@@ -35,7 +35,6 @@ module Icelastic
       end
       
       def initialize(request, feed)
-        #raise feed.#
         self.params = request.params
         self.entries = feed["feed"]["entries"]
         self.facets = feed["feed"]["facets"]
@@ -61,8 +60,6 @@ module Icelastic
         
       end
       
-
-
       private
 
       def defaults
@@ -159,7 +156,7 @@ module Icelastic
       
       
       def feature? test
-        test.key? "properties" and test.key? "geometry" and test.key? "type" and test["type"] == "Feature"
+        test.key? "geometry" and test["geometry"].key? "coordinates" and test["geometry"].key? "type" and test.key? "type" and test["type"] == "Feature"
       end
 
       # Extract latitude from the object
