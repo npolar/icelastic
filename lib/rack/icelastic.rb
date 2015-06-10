@@ -42,7 +42,11 @@ module Rack
     end
     
     def type
-      format =~ /^(json|raw)$/ ? "application/json" : writer.type 
+      if format =~ /^(json|raw)$/ or writer.nil?
+        "application/json"
+      else
+        writer.type 
+      end
     end
     
     def format
@@ -52,9 +56,11 @@ module Rack
     def writer
       writers = @config[:writers].select {|w| w.format == format }
       if writers.none? or writers.size > 1
-        raise "#{writers.size} writers defined for format: #{format}"
+       log.warn "#{writers.size} writers defined for format: #{format}"
+       nil
+      else
+        writers[0]
       end
-      writers[0]
     end
 
     def client
