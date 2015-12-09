@@ -14,6 +14,33 @@ module Icelastic
     def initialize(params = nil)
       self.params = params if params
     end
+    
+    def bool?
+      if multiword? and (params.key? "q" and params["q"] =~ /.*(AND|OR).*/)
+        true
+      else
+        false
+      end
+    end
+    
+    
+    def phrase?
+      if bool?
+        false
+      elsif multiword? and (params.key? "q" and params["q"] =~ /\".*\"/)
+        true
+      else
+        false
+      end
+    end
+    
+    def multiword?
+      if params.key? "q" and params["q"] =~ /.*\s.*/
+        true
+      else
+        false
+      end
+    end
 
     # Get request parameters
     def params
@@ -62,12 +89,31 @@ module Icelastic
 
     # Build a query against all fields
     def global_query
-      {
+      all_query = {
         :query_string => {
           :default_field => :_all,
           :query => query_value
         }
       }
+      
+      if bool?
+        all_query
+      elsif phrase?
+        phrase_query
+      elsif multiword?
+        # Turn multiword query into a phrase query (except when ?op=OR)
+        operator = "AND"
+        if params.key? "op" and params["op"] =~ /OR/i
+          operator = "OR"
+        else
+          params["op"] = "AND"
+        end
+        params["q"] = "\"#{params["q"]}\""
+        phrase_query
+      else
+        all_query
+      end
+      
     end
 
     # Build query against one || more fields
@@ -108,19 +154,67 @@ module Icelastic
     def highlight
       highlighter_defaults
     end
-
+    
+    # @todo FIXME 
+    # https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-match-query.html
+    # def phrase_query
+    #  { :match =>
+    #    { :message => {
+    #        :query => params["q"],
+    #        :type => "phrase"
+    #      }
+    #    }
+    #  }
+    # end
+    
+    # "this is a phrase" (multiple words inside quotes)
+    def phrase_query(operator="AND")
+      before,between = params["q"].split('"').map {|s| clean(s) }
+      between,after = between.split('"').map {|s| clean(s) }
+      if between =~ /\s/
+        words = between.split(/\s/)
+        idx = 0
+        between = words.map {|b|
+          idx = idx+1
+          b = "(#{b} OR #{b}*)"
+          if idx < words.length-1
+            b += " AND"    
+          end
+          b 
+        }.join(" ")
+      end
+      {
+        :query_string => {
+          :default_field => :_all,
+          :query => "#{before} #{between} #{after}".gsub(/^\s+/, "").gsub(/\s+$/, "")
+        }
+      }
+    end
+    
     private
 
     # Clean the query value
     def query_value
       q = params.select{|k,v| k =~ /^q(-(.+)?)?$/}
-      q = !q.nil? && q.any? ? q.values[0].strip.squeeze(" ").gsub(/(\&|\||\!|\(|\)|\{|\}|\[|\]|\^|\~|\:|\!)/, "") : ""
+      q = !q.nil? && q.any? ? clean(q.values[0]) : ""
       q == "" ? "*" : handle_search_pattern(q)
+    end
+    
+    def clean(s)
+      s.strip.squeeze(" ").gsub(/(\&|\||\!|\(|\)|\{|\}|\[|\]|\^|\~|\:|\!|\')/, "")
     end
 
     # Detect query pattern and return an explicit (quoted search) or a simple fuzzy query
     def handle_search_pattern(q)
-      q.match(/^\"(.+)\"$/) ? q.gsub(/\"/, "") : "#{q} #{q}*"
+      if multiword?
+        q = q.split(/\s/).map {|s| "#{s} #{s}*" }.join("")
+        p q
+        q
+      else
+        "#{q} OR #{q}*"
+      end
+      
+      
     end
 
     # Generates a default_field || fields syntax for the query string.
