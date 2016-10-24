@@ -16,7 +16,7 @@ module Icelastic
     #   # Controls the geometry type. Defaults to point
     #   &geometry=(point|multipoint|linestring)
     #
-    # @see http://geojson.org/geojson-spec.html GeoJSON Spec
+    # @see https://tools.ietf.org/html/rfc7946 GeoJSON (RFC7946)
 
     class GeoJSON
 
@@ -27,7 +27,7 @@ module Icelastic
       end
       
       def self.type
-        "application/vnd.geo+json"
+        "application/geo+json"
       end
       
       def self.from
@@ -82,7 +82,7 @@ module Icelastic
       def geometry?
         params.any?{|k, v| k =~ /^geometry$/}
       end
-
+      
       def generate_points(items = entries)
         items.each_with_index.map do |e, i|
           if geo?(e)
@@ -153,10 +153,9 @@ module Icelastic
       def lng_key
         defaults["longitude"]
       end
-      
-      
+
       def feature? test
-        test.key? "geometry" and test["geometry"].key? "coordinates" and test["geometry"].key? "type" and test.key? "type" and test["type"] == "Feature"
+        test.key? "type" and test["type"] == "Feature" and test.key? "geometry" and (test["geometry"].key?("coordinates") || test["geometry"].key?("geometries"))
       end
 
       # Extract latitude from the object
