@@ -6,6 +6,7 @@ require "yajl/json_gem"
 
 require_relative "icelastic/default"
 require_relative "icelastic/query_segment/aggregation"
+require_relative "icelastic/query_segment/geo"
 require_relative "icelastic/query_segment/filter"
 require_relative "icelastic/query_segment/paging"
 require_relative "icelastic/response_writer/feed"

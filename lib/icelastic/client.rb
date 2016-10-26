@@ -62,9 +62,10 @@ module Icelastic
     
     def writer
       w = @writers.select {|w| w.format == format.to_s}
-      if w.none?
-        raise "No writer for \"#{format}\" format, available writers: #{@writers.to_json}"
-      end
+      # Other middleware might define other formats, so we leave put the raise below
+      #if w.none?
+      #  raise "No writer for \"#{format}\" format, available writers: #{@writers.to_json}"
+      #end
       w.first
     end
 

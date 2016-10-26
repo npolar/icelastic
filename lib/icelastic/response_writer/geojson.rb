@@ -44,9 +44,17 @@ module Icelastic
 
       def build
         fc = {
-          "type" => "FeatureCollection",
-          "features" => features
+          "type" => "FeatureCollection"
         }
+        
+        bbox = Default.geo_params["bbox"]
+        if params.key? bbox and (3..5).include? params[bbox].count(",")
+          bbox = params["bbox"].split(",").map {|c| c.to_f}
+          fc["bbox"] = bbox # There's no need to validate because ES crashes if the coords are out of bounds of WGS84 decimal degrees
+        end
+        
+        fc["features"] = features
+        
         if params.key? "variant" and params["variant"] == "atom"
           fc["feed"] = feed
         end

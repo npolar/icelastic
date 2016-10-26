@@ -11,7 +11,9 @@ module Icelastic
     GEO_PARAMS = {
       "latitude" => "latitude",
       "longitude" => "longitude",
-      "geometry" => "point"
+      "geometry" => "point",
+      "bbox" => "bbox", # bbox query parameter
+      "geo_shape_field" => "geometry" # Geo search field (default: GeoJSON)
     }
 
     def self.params

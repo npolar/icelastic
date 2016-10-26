@@ -23,6 +23,11 @@ module Icelastic
       end
     end
     
+    def geo?
+      bbox = Default.geo_params["bbox"]
+      params.key? bbox and (3..5).include? params[bbox].count(",")
+    end
+    
     
     def phrase?
       if bool?
@@ -132,7 +137,14 @@ module Icelastic
     # @see http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-query-filter.html Elasticsearch: Query filters
     # @see http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-and-filter.html Elasticsearch: And filters
     def filter
-      Icelastic::QuerySegment::Filter.new(params).build
+      filter = {}
+      if filter_params.any?
+        filter = Icelastic::QuerySegment::Filter.new(params).build
+      end
+      if geo?
+        filter.merge! Icelastic::QuerySegment::Geo.new(params).build
+      end
+      filter
     end
 
     # Builds a facets segment
@@ -237,9 +249,9 @@ module Icelastic
       params.select{|k,v| k =~ /^filter-(.+)|^not-(.+)/}
     end
 
-    # Returns true if there are filter parameters
+    # Returns true if there are filter-x or geo parameters (currently only bbox=)
     def filters?
-      filter_params.any?
+      filter_params.any? or geo?
     end
 
     # Default highlighting configuration
