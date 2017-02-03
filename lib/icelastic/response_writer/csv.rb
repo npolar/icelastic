@@ -6,11 +6,25 @@ module Icelastic
 
       ALIAS_TOKEN = ":"
 
+      def self.format
+        "csv"
+      end
+
+      def self.from
+        ResponseWriter::Feed
+      end
+
+      def self.type
+        "text/plain"
+      end
+
       def initialize(request, feed)
         self.env = request.env
         self.params = request.params
         self.documents = feed["feed"]["stats"] ? feed["feed"]["stats"] : feed["feed"]["entries"]
       end
+
+
 
       def build
         # Build the csv document
