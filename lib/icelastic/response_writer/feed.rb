@@ -1,24 +1,19 @@
 module Icelastic
   module ResponseWriter
 
-    # Constructs a custom json feed response that borrows some
-    # elements from the Opensearch standard.
-    #
-    # [Authors]
-    #   - Ruben Dens
-    #
-    # @example Basic usage
-    #   feed = Icelastic::ResponseWriter::Feed.new(request, response)
-    #   feed = feed.build # build a feed hash
-    #   feed.to_json
-    #
-    # @see http://www.opensearch.org/Specifications/OpenSearch/1.1/Draft_5 Opensearch-1.1 Draft 5
-
     class Feed
 
       attr_accessor :params, :env, :body_hash, :aggregations
 
       RANGE_REGEX = Icelastic::QuerySegment::RangeAggregation::REGEX
+
+      def self.format
+        "json"
+      end
+
+      def self.type
+        "application/json"
+      end
 
       def initialize(request, body_hash)
         self.env = request.env
@@ -27,86 +22,99 @@ module Icelastic
       end
 
       # construct the feed response
-      def build
-        response = {"feed" => {}.merge!(opensearch)}
-        response["feed"].merge!(list)
-        response["feed"].merge!(search)
-        response["feed"].merge!(facets)
-        response["feed"].merge!(stats)
-        response["feed"].merge!(entries)
-        response
+      def build(&block)
+
+        if params["variant"] == "array"
+          return entries
+        end
+        if params["variant"] == "compact"
+          return [entries[0].keys]+entries.map {|e| e.values}
+        end
+
+        response = {"feed" =>
+          { "opensearch" => opensearch,
+          "search" => search }
+        }
+        if params["variant"] =~ /^(list|legacy|)$/
+          response["feed"]["list"] = list_links
+        else
+          response["feed"]["links"] = links
+        end
+
+        response["feed"]["stats"] = stats
+        response["feed"]["entries"] = entries
+        response["feed"]["facets"] = facets
+
+        # This works, but then format=json&variant=geojson might differ from format=geojson
+        #if params["variant"] == "geojson"
+        #  return Icelastic::ResponseWriter::GeoJSON.new(Rack::Request.new(env), response).build
+        #end
+
+        #if not key.nil? and response.key? key.to_s
+        #  response = response[key.to_s]
+        #end
+
+        if block_given?
+          yield(self)
+        else
+          response
+        end
       end
+
+
 
       def opensearch
         {
-          "opensearch" => {
-            "totalResults" => total_results,
-            "itemsPerPage" => limit,
-            "startIndex" => start
-          }
+          "totalResults" => total_results,
+          "itemsPerPage" => limit,
+          "startIndex" => start
         }
       end
 
-      def list
-        {
-          "list" => {
-            "self" => self_uri,
-            "first" => start,
-            "last" => last,
-            "next" => next_uri,
-            "previous" => previous_uri
-          }
+      def links
+        relations.map {|rel|
+          { "rel" => rel, "href" => href(rel) }
         }
+      end
+
+      def list_links
+        _links = {}
+        relations.each {|rel|
+          _links[rel] = href(rel)
+        }
+        _links
+      end
+
+      def href(rel)
+        case rel
+          when "self" then self_uri
+          when "next" then next_uri
+          when "first" then first_uri
+          when "last" then last_uri
+          when "previous" then previous_uri
+          else raise "Unknown link relation: #{rel}"
+        end
+      end
+
+      def relations
+        ["self", "first", "previous", "next", "last"]
       end
 
       def search
-        search  = {
-          "search" => {
+        search = {
             "qtime" => qtime,
             "q" => query_term
-          }
         }
         if (params.has_key?("score"))
-          search["search"]["max_score"] = max_score
+          search["max_score"] = max_score
         end
         search
       end
 
-      def facets
-        {"facets" => facets? ? generate_facets : nil}
-      end
-
       def stats
-        {"stats" => aggregation? ? format_aggregations : nil}
-      end
-
-      def entries
-        {"entries" => aggregation? ? nil : format_hits}
-      end
-
-      private
-
-      def extract_aggregations
-        self.aggregations = params.select{|k,v| v=~ /^(.+)\[(.+)\]$/i}
-      end
-
-      def aggregation?
-        extract_aggregations.any?
-      end
-
-      # Construct the uri base from the request environment
-      def base
-        "#{env['rack.url_scheme']}://#{env['HTTP_HOST']}#{env['REQUEST_PATH']}"
-      end
-
-      def facets?
-        params.keys.any? do |key|
-          key.match(/^facets|facet-(.+)|date-(.+)|rangefacet-(.+)$/i) &&
-          (params["facets"] != "false")
+        if not aggregation?
+          return nil
         end
-      end
-
-      def format_aggregations
         a = []
         aggregations.each do |k,v|
           interval = $1 if k =~ /^date-(.+)$/
@@ -125,22 +133,44 @@ module Icelastic
         a
       end
 
-      # Construct an entry object from the raw elastic result
-      def format_hits
+      # @return [Array<Hash>] Array of entry objects corresponding to the source document
+      def entries
         body_hash['hits']['hits'].map{|e|
           hit = e['_source']
           if e['highlight']
             hl = {"highlight" => e['highlight']['_all'].join("... ")}
             hit.merge!(hl)
           end
-          if params.has_key?("score")
+          if params.key?("score")
             hit["_score"] = e["_score"]
+          end
+          if params.key?("remove_fields")
+            hit = hit.reject {|k,v| params["remove_fields"].split(',').include? k}
           end
           hit
         }
       end
 
-      def generate_facets
+      # Construct the uri base from the request environment
+      # @return [String]
+      def base
+        "#{env['rack.url_scheme']}://#{env['HTTP_HOST']}#{env['REQUEST_PATH']}"
+      end
+
+      # @return [true|false] Facet query?
+      def facets?
+        params.keys.any? do |key|
+          key.match(/^facets|facet-(.+)|date-(.+)|rangefacet-(.+)$/i) &&
+          (params["facets"] != "false")
+        end
+      end
+
+      # Facet hash
+      # @todo https://github.com/npolar/icelastic/issues/11
+      def facets
+        if false == facets?
+          return []
+        end
         body_hash["aggregations"].map{|facet , obj| {facet => parse_buckets(facet, obj["buckets"])}}
       end
 
@@ -157,9 +187,9 @@ module Icelastic
 
       def format_term(field, term)
         if params.has_key?("rangefacet-#{field}")
-          step_range(params["rangefacet-#{field}"].to_i, term)
+          step_range(params["rangefacet-#{field}"], term)
         else
-      	   term
+      	  term
         end
       end
 
@@ -229,7 +259,7 @@ module Icelastic
       end
 
       def step_range(step, start)
-        "#{start}..#{start + step}"
+        "#{start.to_i}..#{start.to_i + step.to_i}"
       end
 
       # calculate the next time based of a start and interval
@@ -260,14 +290,17 @@ module Icelastic
 
       # The start param is the same as the first item on the page
       alias :first :start
+      alias :start_index :start
 
       # Return the item limit.
       def limit
         params['limit'].to_i if params.has_key?('limit')
       end
+      alias :items_per_page :limit
+
 
       # Returns the index of the last item on the result page
-      def last
+      def lastextract_aggregations
         limit > total_results ? total_results : (start + limit - 1)
       end
 
@@ -284,24 +317,42 @@ module Icelastic
 
       # Returns the uri for the current request
       def self_uri
-        "#{base}?#{query_from_params}"
+        uri_with_default_parameters(start)
       end
 
       # Build the uri for the next page
       def next_uri
-        total_results <= ((start + limit) || limit) ? false : page_uri(start + limit)
+        total_results <= ((start + limit) || limit) ? false : uri_without_default_parameters(start+limit)
+      end
+
+      def first_uri
+        uri_without_default_parameters(0)
+      end
+
+      def last_uri
+        if limit.to_i == 0
+          return first_uri
+        end
+        last = limit*(total_results/limit).ceil
+        uri_without_default_parameters(last)
       end
 
       # Build the uri for the previous page
       def previous_uri
         return false if start == 0
-        start - limit >= 0 ? page_uri(start - limit) : page_uri(0)
+        start - limit >= 0 ? uri_without_default_parameters(start - limit) : first_uri
       end
 
       # Construct a page uri with the specified start index
       def page_uri(start)
         p = params.merge({"start" => start})
-        "#{base}?#{query_from_params(p)}"
+        "#{base}?#{query_from_params(p, true)}"
+      end
+      alias :uri_without_default_parameters :page_uri
+
+      def uri_with_default_parameters(offset=0)
+        p = params.merge({"start" => offset})
+        "#{base}?#{query_from_params(p, false)}"
       end
 
       def qtime
@@ -316,9 +367,25 @@ module Icelastic
         body_hash["hits"]["max_score"]
       end
 
-      # Returns a query string build from a parameter hash.
-      def query_from_params(p = params)
-        p = p.reject{|k, v| Icelastic::Default.params[k] == v if Icelastic::Default.params[k]}
+
+      protected
+
+      def extract_aggregations
+        self.aggregations = params.select{|k,v| v=~ /^(.+)\[(.+)\]$/i}
+      end
+
+      def aggregation?
+        extract_aggregations.any?
+      end
+      alias :stats? :aggregation?
+
+      # Returns a query string build from a parameter hash
+      #
+      def query_from_params(p = params, reject_default=true)
+        if true === reject_default
+          p = p.reject{|k, v| Icelastic::Default.params[k] == v if Icelastic::Default.params[k]}
+        end
+
         query_string = p.map do |k, v|
           if v.respond_to?(:reduce) # value is a hash
             v.reduce(k) {|memo, obj| memo+"["+obj[0]+"]="+obj[1].to_s.gsub(/\s/, "+")}
