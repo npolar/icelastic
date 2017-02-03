@@ -144,8 +144,8 @@ module Icelastic
           if params.key?("score")
             hit["_score"] = e["_score"]
           end
-          if params.key?("remove_fields")
-            hit = hit.reject {|k,v| params["remove_fields"].split(',').include? k}
+          if params.key?("fields-remove")
+            hit = hit.reject {|k,v| params["fields-remove"].split(',').include? k}
           end
           hit
         }
