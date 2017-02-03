@@ -27,6 +27,7 @@ module Icelastic
         if params["variant"] == "array"
           return entries
         end
+        # FIXME breaks if limit=0, could return only headers then?
         if params["variant"] == "compact"
           return [entries[0].keys]+entries.map {|e| e.values}
         end

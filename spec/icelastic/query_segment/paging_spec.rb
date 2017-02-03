@@ -15,8 +15,8 @@ describe Icelastic::QuerySegment::Paging do
     end
 
     it "handle &start=<limit>" do
-      p = paging({"start" => "25"}).build
-      p.should include("from" => 25)
+      p = paging({"start" => "100"}).build
+      p.should include("from" => 100)
     end
 
   end
@@ -25,7 +25,7 @@ describe Icelastic::QuerySegment::Paging do
 
     it "default 20" do
       p = paging({}).build
-      p.should include("size" => 20)
+      p.should include("size" => 100)
     end
 
     it "handle &limit=<limit>" do

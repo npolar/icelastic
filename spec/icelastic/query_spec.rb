@@ -52,9 +52,50 @@ describe Icelastic::Query do
     end
 
   end
+  
+  context "Phrase query" do
+    
+    before do
+      subject.params = {"q" => "contains \"some phrase\"" }
+    end
+    
+    context "#phrase?" do
+
+      it "true when q = \"some phrase\"" do
+        subject.phrase?.should == true
+      end
+      it  "false when q = ice"do
+        subject.params = {"q" => "ice" }
+        subject.phrase?.should == false
+      end
+
+    end
+    
+    context "#phrase_query" do
+      
+      # @todo Use a real phrase query
+      #{
+      #  :match => {
+      #      :message => {
+      #          :query => "contains \"some phrase\"",
+      #          :type => "phrase"
+      #      }
+      #  }
+      #}  
+      it do
+        subject.phrase_query.should ==  {
+          :query_string =>{ :default_field => :_all,
+          :query=>"contains (some OR some*) (phrase OR phrase*)"}
+        }
+      end
+    end
+    
+  end
+  
+
 
   context "Query Segments" do
-
+    
     context "#query_string" do
 
       it "call #global_query when q" do
@@ -98,27 +139,29 @@ describe Icelastic::Query do
         subject.global_query.should == {
           :query_string => {
             :default_field => :_all,
-            :query => "inter inter*"
+            :query => "inter OR inter*"
           }
         }
       end
 
-      it "handle q=\"explicit qeury\"" do
-        subject.params = "q=\"explicit query\""
-        subject.global_query.should == {
-          :query_string => {
-            :default_field => :_all,
-            :query => "explicit query"
-          }
-        }
-      end
+      #it "handle q=\"phrase query\"" do
+      #  subject.params = "q=\"phrase query\""
+      #  subject.global_query.should == {
+      #      :match => {
+      #          :message => {
+      #              :query => "\"phrase query\"",
+      #              :type => "phrase"
+      #          }
+      #      }
+      #  }
+      #end
 
       it "ignore ! characters in q=" do
         subject.params = "q=BOO!"
         subject.global_query.should == {
           :query_string => {
             :default_field => :_all,
-            :query => "BOO BOO*"
+            :query => "BOO OR BOO*"
           }
         }
       end
@@ -128,7 +171,7 @@ describe Icelastic::Query do
         subject.global_query.should == {
           :query_string => {
             :default_field => :_all,
-            :query => "my sloppy query my sloppy query*"
+            :query => "(my OR my*) AND (sloppy OR sloppy*) (query OR query*)"
           }
         }
       end
@@ -138,7 +181,7 @@ describe Icelastic::Query do
         subject.global_query.should == {
           :query_string => {
             :default_field => :_all,
-            :query => "search search*"
+            :query => "search OR search*"
           }
         }
       end
@@ -152,7 +195,7 @@ describe Icelastic::Query do
         subject.field_query.should == {
           :query_string => {
             :default_field => "title",
-            :query => "search search*"
+            :query => "search OR search*"
           }
         }
       end
@@ -162,7 +205,7 @@ describe Icelastic::Query do
         subject.query_string.should == {
           :query_string => {
             :default_field => :_all,
-            :query => "search search*"
+            :query => "search OR search*"
           }
         }
       end
@@ -172,7 +215,7 @@ describe Icelastic::Query do
         subject.field_query.should == {
           :query_string => {
             :fields => ["title", "summary"],
-            :query => "search search*"
+            :query => "search OR search*"
           }
         }
       end
@@ -182,7 +225,7 @@ describe Icelastic::Query do
         subject.field_query.should == {
           :query_string => {
             :fields => ["block.*"],
-            :query => "search search*"
+            :query => "search OR search*"
           }
         }
       end

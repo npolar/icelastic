@@ -29,7 +29,7 @@ module Icelastic
           aggs["aggregations"].merge!(term_aggregations)  if extract_params(TERM_REGEX)
           aggs["aggregations"].merge!(labeled_aggregations) if extract_params(LABELED_REGEX)
           aggs["aggregations"].merge!(date_aggregations) if extract_params(DATE_REGEX)
-          aggs["aggregations"].merge!(@range.build_aggregations(params))
+          aggs["aggregations"].merge!(@range.build_aggregations(params, aggregation_size))
           aggs
         end
       end

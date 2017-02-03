@@ -16,27 +16,58 @@ module Icelastic
     #   # Controls the geometry type. Defaults to point
     #   &geometry=(point|multipoint|linestring)
     #
-    # @see http://geojson.org/geojson-spec.html GeoJSON Spec
+    # @see https://tools.ietf.org/html/rfc7946 GeoJSON (RFC7946)
 
     class GeoJSON
 
-      attr_accessor :feed, :stats, :entries, :params
+      attr_accessor :feed, :stats, :facets, :entries, :params
 
+      def self.format  
+        "geojson"
+      end
+      
+      def self.type
+        "application/geo+json"
+      end
+      
+      def self.from
+        ResponseWriter::Feed
+      end
+      
       def initialize(request, feed)
         self.params = request.params
         self.entries = feed["feed"]["entries"]
+        self.facets = feed["feed"]["facets"]
         self.stats = feed["feed"]["stats"]
         self.feed = feed["feed"].delete_if{|k| ["entries", "facets", "stats"].include?(k) }
       end
 
       def build
-        {
-          "feed" => feed,
-          "type" => "FeatureCollection",
-          "features" => select_mode
-        }.to_json
+        fc = {
+          "type" => "FeatureCollection"
+        }
+        
+        bbox = Default.geo_params["bbox"]
+        if params.key? bbox and (3..5).include? params[bbox].count(",")
+          bbox = params["bbox"].split(",").map {|c| c.to_f}
+          fc["bbox"] = bbox # There's no need to validate because ES crashes if the coords are out of bounds of WGS84 decimal degrees
+        end
+        
+        fc["features"] = features
+        
+        if params.key? "variant" and params["variant"] == "atom"
+          fc["feed"] = feed
+        end
+        if params.key? "facets"
+          fc["facets"] = facets
+        end
+        if params.key? "stats"
+          fc["stats"] = stats
+        end
+        fc
+        
       end
-
+      
       private
 
       def defaults
@@ -59,7 +90,7 @@ module Icelastic
       def geometry?
         params.any?{|k, v| k =~ /^geometry$/}
       end
-
+      
       def generate_points(items = entries)
         items.each_with_index.map do |e, i|
           if geo?(e)
@@ -131,6 +162,10 @@ module Icelastic
         defaults["longitude"]
       end
 
+      def feature? test
+        test.key? "type" and test["type"] == "Feature" and test.key? "geometry" and (test["geometry"].key?("coordinates") || test["geometry"].key?("geometries"))
+      end
+
       # Extract latitude from the object
       def latitude(obj)
         stats ? obj[lat_key]["avg"] : obj[lat_key]
@@ -147,12 +182,15 @@ module Icelastic
       end
 
       # Trigger the correct generator depending on the mode
-      def select_mode
-        case mode
-        when /LineString/i then stats ? generate_multi_feature(stats, "LineString") : generate_multi_feature(entries, "LineString")
-        when /MultiPoint/i then stats ? generate_multi_feature(stats, "MultiPoint") : generate_multi_feature(entries, "MultiPoint")
-        #when /ContextLine/i then stats ? generate_contextline(stats) : generate_contextline
-        else stats ? generate_points(stats) : generate_points
+      def features
+        if entries.size > 0 and feature?(entries[0])
+          entries
+        else case mode
+          when /LineString/i then stats ? generate_multi_feature(stats, "LineString") : generate_multi_feature(entries, "LineString")
+          when /MultiPoint/i then stats ? generate_multi_feature(stats, "MultiPoint") : generate_multi_feature(entries, "MultiPoint")
+          #when /ContextLine/i then stats ? generate_contextline(stats) : generate_contextline
+          else stats ? generate_points(stats) : generate_points
+          end
         end
       end
 
