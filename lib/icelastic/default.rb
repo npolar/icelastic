@@ -3,14 +3,17 @@ module Icelastic
 
     DEFAULT_PARAMS = {
       "start" => 0,
-      "limit" => 20,
-      "size-facet" => 15,
+      "limit" => 100,
+      "size-facet" => 10,
+      "variant" => "legacy"
     }
 
     GEO_PARAMS = {
       "latitude" => "latitude",
       "longitude" => "longitude",
-      "geometry" => "point"
+      "geometry" => "point",
+      "bbox" => "bbox", # bbox query parameter
+      "geo_shape_field" => "geometry" # Geo search field (default: GeoJSON)
     }
 
     def self.params
@@ -27,6 +30,10 @@ module Icelastic
 
     def self.geo_params=(params)
       @gp = GEO_PARAMS.merge(params)
+    end
+    
+    def self.writers
+      [ ResponseWriter::Feed, ResponseWriter::Csv, ResponseWriter::GeoJSON, ResponseWriter::HAL ]
     end
 
   end

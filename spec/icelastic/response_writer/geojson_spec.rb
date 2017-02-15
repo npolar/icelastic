@@ -34,7 +34,7 @@ describe Icelastic::ResponseWriter::GeoJSON do
     }
   end
 
-  def http_search(query)
+  def mock_request(query)
     Rack::Request.new(
       Rack::MockRequest.env_for(
         "/endpoint", "HTTP_HOST" => "example.org", "REQUEST_PATH" => "/endpoint",
@@ -50,34 +50,34 @@ describe Icelastic::ResponseWriter::GeoJSON do
 
   context "normal" do
 
-    it "return a feed header" do
-      g = geojson(http_search("q=&format=geojson")).build
-      g.should include('"feed":{}')
+    it "not return a feed header" do
+      g = geojson(mock_request("q=&format=geojson")).build
+      g.should_not have_key("feed")
     end
 
-    it "return a FeatureCollection" do
-      g = geojson(http_search("q=&format=geojson")).build
-      g.should include('"type":"FeatureCollection"')
+    it "type = FeatureCollection" do
+      g = geojson(mock_request("q=&format=geojson")).build
+      g["type"].should eq("FeatureCollection")
     end
 
-    it "return a Point feature by default" do
-      g = geojson(http_search("q=&format=geojson")).build
-      g.should include('"geometry":{"type":"Point"')
+    it "with Point geometry [default]" do
+      g = geojson(mock_request("q=&format=geojson")).build
+      expect(g["features"].map {|f|f["geometry"]}.all? {|g| g["type"] == "Point"}).to be(true)
+    end
+    
+    it "with Point geometry when geometry=point" do      
+      g = geojson(mock_request("q=&format=geojson&geometry=point")).build
+      expect(g["features"].map {|f|f["geometry"]}.all? {|g| g["type"] == "Point"}).to be(true)
     end
 
-    it "generate a point when geometry=point" do
-      g = geojson(http_search("q=&format=geojson&geometry=point")).build
-      g.should include('"geometry":{"type":"Point"')
-    end
-
-    it "return a LineString feature when &geometry=linestring" do
-      g = geojson(http_search("q=&format=geojson&geometry=linestring")).build
-      g.should include('"geometry":{"type":"LineString"')
+    it "with LineString geometry when &geometry=linestring" do
+      g = geojson(mock_request("q=&format=geojson&geometry=linestring")).build
+      expect(g["features"].map {|f|f["geometry"]}.all? {|g| g["type"] == "LineString"}).to be(true)
     end
 
     it "return a MultiPoint feature when &geometry=multipoint" do
-      g = geojson(http_search("q=&format=geojson&geometry=MultiPoint")).build
-      g.should include('"geometry":{"type":"MultiPoint"')
+      g = geojson(mock_request("q=&format=geojson&geometry=MultiPoint")).build
+      expect(g["features"].map {|f|f["geometry"]}.all? {|g| g["type"] == "MultiPoint"}).to be(true)
     end
 
   end
@@ -85,7 +85,7 @@ describe Icelastic::ResponseWriter::GeoJSON do
   context "stats" do
 
     it "should use the avg position" do
-      g = geojson(http_search("q=&format=geojson")).build
+      g = geojson(mock_request("q=&format=geojson")).build.to_json
       g.should include('"coordinates":[18,69]')
     end
 

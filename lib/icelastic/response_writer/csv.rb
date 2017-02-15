@@ -5,6 +5,18 @@ module Icelastic
       attr_accessor :env, :documents, :params
 
       ALIAS_TOKEN = ":"
+      
+      def self.format  
+        "csv"
+      end
+      
+      def self.from
+        ResponseWriter::Feed
+      end
+      
+      def self.type
+        "text/plain"
+      end
 
       def self.format
         "csv"
@@ -23,6 +35,8 @@ module Icelastic
         self.params = request.params
         self.documents = feed["feed"]["stats"] ? feed["feed"]["stats"] : feed["feed"]["entries"]
       end
+      
+
 
 
 

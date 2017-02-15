@@ -7,7 +7,7 @@ module Icelastic
 
       REGEX = /^rangefacet-(?<field>.+)/i
 
-      def build_aggregations(params)
+      def build_aggregations(params, size)
         aggregations = {}
         valid_rangefacet_queries(params).each do |k,v|
           value = v.to_i
@@ -23,7 +23,8 @@ module Icelastic
                       "interval" => value
                     },
                     "lang" => "groovy",
-                    "order" => { "_term" => "asc" }
+                    "order" => { "_term" => "asc" },
+                    "size" => size
                   }
                 }
               })
