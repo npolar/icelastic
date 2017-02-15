@@ -28,7 +28,11 @@ module Icelastic
           return entries
         end
         if params["variant"] == "compact"
-          return [entries[0].keys]+entries.map {|e| e.values}
+          if limit > 0
+            return [entries[0].keys]+entries.map {|e| e.values}
+          else
+            raise ArgumentError.new("400 Bad request: Limit > 0 is required for compact array response")
+          end
         end
 
         response = {"feed" =>
