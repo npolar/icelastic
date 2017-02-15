@@ -23,11 +23,9 @@ module Icelastic
 
       # construct the feed response
       def build(&block)
-
         if params["variant"] == "array"
           return entries
         end
-        # FIXME breaks if limit=0, could return only headers then?
         if params["variant"] == "compact"
           if limit > 0
             return [entries[0].keys]+entries.map {|e| e.values}
