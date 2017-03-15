@@ -4,17 +4,17 @@ module Icelastic
     class Feed
 
       attr_accessor :params, :env, :body_hash, :aggregations
-      
+
       RANGE_REGEX = Icelastic::QuerySegment::RangeAggregation::REGEX
-      
-      def self.format  
+
+      def self.format
         "json"
       end
-      
+
       def self.type
         "application/json"
       end
-                  
+
       def initialize(request, body_hash)
         self.env = request.env
         self.params = request_params(request)
@@ -23,11 +23,17 @@ module Icelastic
 
       # construct the feed response
       def build(&block)
-        
         if params["variant"] == "array"
           return entries
         end
-        
+        if params["variant"] == "compact"
+          if limit > 0
+            return [entries[0].keys]+entries.map {|e| e.values}
+          else
+            raise ArgumentError.new("400 Bad request: Limit > 0 is required for compact array response")
+          end
+        end
+
         response = {"feed" =>
           { "opensearch" => opensearch,
           "search" => search }
@@ -40,26 +46,26 @@ module Icelastic
 
         response["feed"]["stats"] = stats
         response["feed"]["entries"] = entries
-        response["feed"]["facets"] = facets        
-        
+        response["feed"]["facets"] = facets
+
         # This works, but then format=json&variant=geojson might differ from format=geojson
         #if params["variant"] == "geojson"
         #  return Icelastic::ResponseWriter::GeoJSON.new(Rack::Request.new(env), response).build
         #end
-        
+
         #if not key.nil? and response.key? key.to_s
         #  response = response[key.to_s]
         #end
-        
+
         if block_given?
           yield(self)
         else
           response
         end
       end
-      
 
-      
+
+
       def opensearch
         {
           "totalResults" => total_results,
@@ -73,7 +79,7 @@ module Icelastic
           { "rel" => rel, "href" => href(rel) }
         }
       end
-      
+
       def list_links
         _links = {}
         relations.each {|rel|
@@ -81,7 +87,7 @@ module Icelastic
         }
         _links
       end
-    
+
       def href(rel)
         case rel
           when "self" then self_uri
@@ -92,7 +98,7 @@ module Icelastic
           else raise "Unknown link relation: #{rel}"
         end
       end
-      
+
       def relations
         ["self", "first", "previous", "next", "last"]
       end
@@ -138,8 +144,11 @@ module Icelastic
             hl = {"highlight" => e['highlight']['_all'].join("... ")}
             hit.merge!(hl)
           end
-          if params.has_key?("score")
+          if params.key?("score")
             hit["_score"] = e["_score"]
+          end
+          if params.key?("fields-remove")
+            hit = hit.reject {|k,v| params["fields-remove"].split(',').include? k}
           end
           hit
         }
@@ -285,13 +294,13 @@ module Icelastic
       # The start param is the same as the first item on the page
       alias :first :start
       alias :start_index :start
-      
+
       # Return the item limit.
       def limit
         params['limit'].to_i if params.has_key?('limit')
       end
       alias :items_per_page :limit
-      
+
 
       # Returns the index of the last item on the result page
       def lastextract_aggregations
@@ -318,11 +327,11 @@ module Icelastic
       def next_uri
         total_results <= ((start + limit) || limit) ? false : uri_without_default_parameters(start+limit)
       end
-      
+
       def first_uri
         uri_without_default_parameters(0)
       end
-      
+
       def last_uri
         if limit.to_i == 0
           return first_uri
@@ -343,7 +352,7 @@ module Icelastic
         "#{base}?#{query_from_params(p, true)}"
       end
       alias :uri_without_default_parameters :page_uri
-      
+
       def uri_with_default_parameters(offset=0)
         p = params.merge({"start" => offset})
         "#{base}?#{query_from_params(p, false)}"
@@ -360,10 +369,10 @@ module Icelastic
       def max_score
         body_hash["hits"]["max_score"]
       end
-      
-      
+
+
       protected
-      
+
       def extract_aggregations
         self.aggregations = params.select{|k,v| v=~ /^(.+)\[(.+)\]$/i}
       end
@@ -374,12 +383,12 @@ module Icelastic
       alias :stats? :aggregation?
 
       # Returns a query string build from a parameter hash
-      # 
+      #
       def query_from_params(p = params, reject_default=true)
         if true === reject_default
           p = p.reject{|k, v| Icelastic::Default.params[k] == v if Icelastic::Default.params[k]}
         end
-        
+
         query_string = p.map do |k, v|
           if v.respond_to?(:reduce) # value is a hash
             v.reduce(k) {|memo, obj| memo+"["+obj[0]+"]="+obj[1].to_s.gsub(/\s/, "+")}

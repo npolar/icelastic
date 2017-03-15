@@ -22,18 +22,18 @@ module Icelastic
 
       attr_accessor :feed, :stats, :facets, :entries, :params
 
-      def self.format  
+      def self.format
         "geojson"
       end
-      
+
       def self.type
         "application/geo+json"
       end
-      
+
       def self.from
         ResponseWriter::Feed
       end
-      
+
       def initialize(request, feed)
         self.params = request.params
         self.entries = feed["feed"]["entries"]
@@ -46,15 +46,15 @@ module Icelastic
         fc = {
           "type" => "FeatureCollection"
         }
-        
+
         bbox = Default.geo_params["bbox"]
         if params.key? bbox and (3..5).include? params[bbox].count(",")
           bbox = params["bbox"].split(",").map {|c| c.to_f}
           fc["bbox"] = bbox # There's no need to validate because ES crashes if the coords are out of bounds of WGS84 decimal degrees
         end
-        
+
         fc["features"] = features
-        
+
         if params.key? "variant" and params["variant"] == "atom"
           fc["feed"] = feed
         end
@@ -65,9 +65,9 @@ module Icelastic
           fc["stats"] = stats
         end
         fc
-        
+
       end
-      
+
       private
 
       def defaults
@@ -90,17 +90,18 @@ module Icelastic
       def geometry?
         params.any?{|k, v| k =~ /^geometry$/}
       end
-      
+
       def generate_points(items = entries)
         items.each_with_index.map do |e, i|
           if geo?(e)
+          properties = e.reject {|k,v| k =~ /^(lat|long|alt)itude|filter/ }
             {
               "type" => "Feature",
               "geometry" => {
                 "type" => "Point",
                 "coordinates" => [longitude(e), latitude(e)]
               },
-              "properties" => e.merge({"sequence" => i}) #stats ? flatten_stats(e) : e
+              "properties" => properties
             }
           end
         end
