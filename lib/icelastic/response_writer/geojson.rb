@@ -126,7 +126,7 @@ module Icelastic
           "start_latitude" => latitude(items.first),
           "start_longitude" => longitude(items.first),
           "stop_latitude" => latitude(items.last),
-          "stop_longitde" => longitude(items.last)
+          "stop_longitude" => longitude(items.last)
         }
         p.merge(common_items(items.first, items.last))
       end
