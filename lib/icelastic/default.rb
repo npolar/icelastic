@@ -9,9 +9,11 @@ module Icelastic
     }
 
     GEO_PARAMS = {
+      # keys mapped to coordinates
       "latitude" => "latitude",
       "longitude" => "longitude",
-      "geometry" => "point",
+      "altitude" => "altitude",
+      "geometry" => "Point",
       "bbox" => "bbox", # bbox query parameter
       "geo_shape_field" => "geometry" # Geo search field (default: GeoJSON)
     }
@@ -31,7 +33,7 @@ module Icelastic
     def self.geo_params=(params)
       @gp = GEO_PARAMS.merge(params)
     end
-    
+
     def self.writers
       [ ResponseWriter::Feed, ResponseWriter::Csv, ResponseWriter::GeoJSON, ResponseWriter::HAL ]
     end

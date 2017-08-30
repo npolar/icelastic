@@ -31,22 +31,22 @@ module Icelastic
     def search(request)
       self.env = request.env
       self.response = client.search({:body => query, :index => search_index, :type => type})
-      
+
       result = write
-      
+
       if result.is_a? Hash or result.is_a? Array
         result.to_json
       else
         result
       end
     end
-    
+
     def writers=(writers)
       @writers = writers
     end
-    
+
     protected
-     
+
     def from
       if writer.respond_to? :from
         responseclass = @writers.first {|w| w == writer.from  }
@@ -55,18 +55,20 @@ module Icelastic
         response
       end
     end
-    
+
     def format
       (request_params.key? "format" and request_params["format"] != "") ? request_params["format"] : "json"
     end
-    
+
     def writer
-      w = @writers.select {|w| w.format == format.to_s}
-      # Other middleware might define other formats, so we leave put the raise below
-      #if w.none?
-      #  raise "No writer for \"#{format}\" format, available writers: #{@writers.to_json}"
-      #end
-      w.first
+      w = @writers.select {|w| w.format.downcase == format.to_s.downcase }
+      if w.none?
+        nil
+        # Other middleware might define other formats, so we cannot raise raise exception here
+        # raise "No writer for \"#{format}\" format, available writers: #{@writers.to_json}"
+      else
+        w.first
+      end
     end
 
     # Grab the document count for the index
@@ -80,10 +82,13 @@ module Icelastic
       if "raw" == format
         response
       else
-        writer.new(Rack::Request.new(generate_env), from).build
+        w = writer
+        if w.nil?
+          # noop
+        else
+          writer.new(Rack::Request.new(generate_env), from).build
+        end
       end
-      
-      
     end
 
     # Generate a new environement. Needed to merge in the new limit param when limit=all is called

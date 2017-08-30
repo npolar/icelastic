@@ -1,8 +1,7 @@
 module Icelastic
   module ResponseWriter
 
-    # Response writer that supports geojson generation based on the
-    # libraries feed response
+    # GeoJSON response writer based on the icelastic feed response
     #
     # [Authors]
     #   - Ruben Dens
@@ -11,10 +10,6 @@ module Icelastic
     #   geojson = Icelastic::ResponseWriter::GeoJSON.new(request, response)
     #   geojson = geojson.build # build a feed hash
     #   geojson.to_json
-    #
-    # @example Parameter Switches
-    #   # Controls the geometry type. Defaults to point
-    #   &geometry=(point|multipoint|linestring)
     #
     # @see https://tools.ietf.org/html/rfc7946 GeoJSON (RFC7946)
 
@@ -55,6 +50,22 @@ module Icelastic
 
         fc["features"] = features
 
+        # Null properties?
+        if params["properties"] == "null"
+          fc["features"].map! {|f|
+            f["properties"]=nil
+            f
+          }
+        end
+
+        # Null geometry?
+        if params["geometry"] == "null"
+          fc["features"].map! {|f|
+            f["geometry"]=nil
+            f
+          }
+        end
+
         if params.key? "variant" and params["variant"] == "atom"
           fc["feed"] = feed
         end
@@ -64,11 +75,33 @@ module Icelastic
         if params.key? "stats"
           fc["stats"] = stats
         end
-        fc
+        if params.key? "type" and params["type"] =~ /^Feature$/i
+          if fc["features"].size > 0
+            fc["features"][0]
+          else
+            { type: "Feature", properties: nil, geometry: nil  }
+          end
+        else
+          fc
+        end
 
       end
 
       private
+
+      def coordinates e,include_altitude=nil
+        coordinates = [longitude(e), latitude(e)]
+        if [nil,nil] == coordinates
+          coordinates = nil
+        end
+        if e.key?(alt_key) and !coordinates.nil? and include_altitude.nil?
+          include_altitude = true
+        end
+        if e.key?(alt_key) and !coordinates.nil? and coordinates.size == 2 and true == include_altitude
+          coordinates.push altitude(e)
+        end
+        coordinates
+      end
 
       def defaults
         Icelastic::Default.geo_params
@@ -76,6 +109,9 @@ module Icelastic
 
       # Returns a hash of common items in two hashes
       def common_items(obj1, obj2)
+        if obj1.nil? or obj2.nil?
+          return {} # Typically happens when a filter selects 0 documents
+        end
         obj1.select do |k,v|
           obj2.has_key?(k) && v == obj2[k]
         end
@@ -83,7 +119,7 @@ module Icelastic
 
       # Check if the object contains the geo fields
       def geo?(obj)
-        obj[lat_key] && obj[lng_key]
+        obj[lat_key] and obj[lng_key]
       end
 
       # True if the geometry is set by the user
@@ -93,42 +129,70 @@ module Icelastic
 
       def generate_points(items = entries)
         items.each_with_index.map do |e, i|
-          if geo?(e)
-          properties = e.reject {|k,v| k =~ /^(lat|long|alt)itude|filter/ }
+          #if geo?(e)
             {
               "type" => "Feature",
-              "geometry" => {
-                "type" => "Point",
-                "coordinates" => [longitude(e), latitude(e)]
-              },
-              "properties" => properties
+              "geometry" => geometry(e),
+              "properties" => properties(e)
             }
-          end
+          #end
         end
       end
 
-      # Generate a feature with multiple elements like LineString and MultiPoint
-      def generate_multi_feature(items = entries, type)
-        [
-          {
-            "type" => "Feature",
-            "geometry" => {
-              "type" => type,
-              "coordinates" => items.map{|e| [longitude(e), latitude(e)] if geo?(e)}
-            },
-            "properties" => global_properties(items)
+      # Generate LineString or MultiPoint
+      def generate_multi_feature(items = entries, type="LineString")
+
+        if items.size < 1
+          return []
+        end
+
+        if type =~ /linestring/i
+          type = "LineString"
+        elsif type =~ /MultiPoint/i
+          type = "MultiPoint"
+        else
+          raise "Unsupported feature type: #{type}"
+        end
+
+        f = {
+          "type" => "Feature",
+          "geometry" => {
+            "type" => type,
+            "coordinates" => items.map{ |e| coordinates(e) }
+          },
+          "properties" => multi_properties(items)
+        }
+
+        # Add column arrays to properties (default is * ie. columnize everything except coordinates)
+        column_keys = (params["array"]||"*").split(",")
+
+        # Support &array=* to generate column arrays on all fields except filtered fields
+        if column_keys.include? "*"
+          non_string_keys = items.map {|e|
+            ( e.keys - [lng_key,lat_key,alt_key]).reject do |k|
+              if params["filter-#{k}"] and params["filter-#{k}"] !~ /(\.{2}|\|{1}|\,{1})/
+                true # reject simple filtered variables (no a..b ranges)
+              else
+                false # don't reject
+              end
+            end
           }
-        ]
+          column_keys = non_string_keys.flatten.uniq.sort
+        end
+
+        column_keys.uniq.each do |k|
+          f["properties"][k] = items.map {|e| e[k] }
+        end
+
+        [f]
+      end
+
+      def multi_properties items
+        global_properties(items)
       end
 
       def global_properties(items)
-        p = {
-          "start_latitude" => latitude(items.first),
-          "start_longitude" => longitude(items.first),
-          "stop_latitude" => latitude(items.last),
-          "stop_longitde" => longitude(items.last)
-        }
-        p.merge(common_items(items.first, items.last))
+        common_items(items.first, items.last)
       end
 
       #def generate_contextline(items = entries)
@@ -155,16 +219,37 @@ module Icelastic
         #i
       #end
 
-      def lat_key
-        defaults["latitude"]
+      def lng_key
+        if params.key? "coordinates" and params["coordinates"].split(",").size > 0
+          lng = params["coordinates"].split(",")[0]
+        else
+          defaults["longitude"]
+        end
       end
 
-      def lng_key
-        defaults["longitude"]
+      def lat_key
+        if params.key? "coordinates" and params["coordinates"].split(",").size > 1
+          params["coordinates"].split(",")[1]
+        else
+          defaults["latitude"]
+        end
+      end
+
+      def alt_key
+        if params.key? "coordinates" and params["coordinates"].split(",").size > 2
+          params["coordinates"].split(",")[2]
+        else
+          defaults["altitude"]
+        end
       end
 
       def feature? test
         test.key? "type" and test["type"] == "Feature" and test.key? "geometry" and (test["geometry"].key?("coordinates") || test["geometry"].key?("geometries"))
+      end
+
+      # Extract longitude from the object
+      def longitude(obj)
+        stats ? obj[lng_key]["avg"] : obj[lng_key]
       end
 
       # Extract latitude from the object
@@ -172,9 +257,8 @@ module Icelastic
         stats ? obj[lat_key]["avg"] : obj[lat_key]
       end
 
-      # Extract longitude from the object
-      def longitude(obj)
-        stats ? obj[lng_key]["avg"] : obj[lng_key]
+      def altitude(obj)
+        stats ? obj[alt_key]["avg"] : obj[alt_key]
       end
 
       # Return which mode to use
@@ -185,13 +269,40 @@ module Icelastic
       # Trigger the correct generator depending on the mode
       def features
         if entries.size > 0 and feature?(entries[0])
-          entries
+          entries # ie. Don't touch entries that are already GeoJSON features
         else case mode
           when /LineString/i then stats ? generate_multi_feature(stats, "LineString") : generate_multi_feature(entries, "LineString")
           when /MultiPoint/i then stats ? generate_multi_feature(stats, "MultiPoint") : generate_multi_feature(entries, "MultiPoint")
           #when /ContextLine/i then stats ? generate_contextline(stats) : generate_contextline
           else stats ? generate_points(stats) : generate_points
           end
+        end
+      end
+
+      def properties e
+        if params["properties"] == "null"
+          nil
+        else
+          [lng_key,lat_key,alt_key].each {|c|
+            e.delete c
+          }
+          properties = e.reject {|k,v| k =~ /^filter/ }
+          if {} == properties
+            nil
+          else
+            properties
+          end
+        end
+      end
+
+      def geometry e
+        if params["geometry"] == "null"
+          nil
+        else
+          {
+            "type" => "Point",
+            "coordinates" => coordinates(e)
+          }
         end
       end
 
