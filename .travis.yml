@@ -12,4 +12,4 @@ before_install:
   - cp -r scripts /tmp/elasticsearch
 script:
   - bundle exec rspec && CODECLIMATE_REPO_TOKEN=a7015dadf03b5cd162523528bec8f4c1c9de7e62d0e339e76e4dfbf77c4d4d81 bundle exec codeclimate-test-reporter
-
+dist: trusty
