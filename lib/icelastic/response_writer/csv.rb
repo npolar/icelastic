@@ -5,15 +5,15 @@ module Icelastic
       attr_accessor :env, :documents, :params
 
       ALIAS_TOKEN = ":"
-      
-      def self.format  
+
+      def self.format
         "csv"
       end
-      
+
       def self.from
         ResponseWriter::Feed
       end
-      
+
       def self.type
         "text/plain"
       end
@@ -30,19 +30,27 @@ module Icelastic
         "text/plain"
       end
 
+      def self.sep
+        "\t"
+      end
+
       def initialize(request, feed)
         self.env = request.env
         self.params = request.params
         self.documents = feed["feed"]["stats"] ? feed["feed"]["stats"] : feed["feed"]["entries"]
       end
-      
 
-
-
+      def sep
+        sep = self.class.sep
+        if params.key? "sep"
+          sep = params["sep"]
+        end
+        sep
+      end
 
       def build
         # Build the csv document
-        CSV.generate({:col_sep => "\t", :quote_char => "'"}) do |csv|
+        CSV.generate({:col_sep => params["sep"]||self.class.sep, :quote_char => "'"}) do |csv|
           csv << header
           rows.each {|r| csv << r}
         end
