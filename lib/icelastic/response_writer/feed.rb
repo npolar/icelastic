@@ -168,13 +168,54 @@ module Icelastic
         end
       end
 
-      # Facet hash
-      # @todo https://github.com/npolar/icelastic/issues/11
+      # Facets
       def facets
         if false == facets?
           return []
         end
+        if not params.key? "facet-variant"
+          facets_legacy_array
+        else
+          case params["facet-variant"]
+          when "legacy"
+            facets_legacy_array
+          when "object"
+            # Implements https://github.com/npolar/icelastic/issues/11
+            facets_legacy_array[0]
+          when "tuple"
+            tuple_facets
+          when "term"
+            tuple_facets false
+          else
+            raise "Unknown facet variant: #{ params["facet-variant"] }"
+          end
+        end
+      end
+
+      def facets_legacy_array
+        if false == facets?
+          return []
+        end
         body_hash["aggregations"].map{|facet , obj| {facet => parse_buckets(facet, obj["buckets"])}}
+      end
+
+      def tuple_facets counts=true
+        legacy = facets_legacy_array[0]
+        terms = facets_legacy_array[0].keys
+        facets = {}
+        terms.each do |term|
+          facets[term] = legacy[term].map {|l|
+
+            if counts
+              t = [ l["term"], l["count"] ]
+            else
+              t = l["term"]
+            end
+
+            t
+          }
+        end
+        facets
       end
 
       def parse_buckets(facet, buckets)
