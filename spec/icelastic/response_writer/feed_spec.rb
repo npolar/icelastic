@@ -172,7 +172,43 @@ describe Icelastic::ResponseWriter::Feed do
 
   end
 
-  context "#facets" do
+  context "#facets (facet.variant=object)" do
+
+    subject(:facets) { feed_factory("q=foo&facets=tags&facet.variant=object").facets }
+    it "a facet object should have the keys: term, uri, count" do
+      expect(facets).to be_a(Hash)
+      expect(facets).to have_key("tags")
+      expect(facets["tags"].length).to eq(2)
+      expect(facets["tags"].all? {|t| t.key? "term" and t.key? "uri" and t.key? "count" }).to eq(true)
+    end
+    it {
+      expect(facets["tags"][0]).to eq({"term"=>"foo", "count"=>88, "uri"=>"http://example.org/endpoint?q=foo&facets=tags&facet.variant=object&filter-tags=foo"})
+    }
+
+  end
+
+  context "#facets (facet.variant=tuple)" do
+
+    subject(:facets) { feed_factory("q=foo&facets=tags&facet.variant=tuple").facets }
+    it "a facet tuple should consist of [term,count]" do
+      expect(facets).to be_a(Hash)
+      expect(facets).to have_key("tags")
+      expect(facets["tags"].length).to eq(2)
+      expect(facets["tags"].all? {|t| t[1].is_a? Fixnum }).to eq(true)
+    end
+    it {
+      expect(facets["tags"][0]).to eq(["foo", 88])
+    }
+  end
+
+  context "#facets (facet.variant=term)" do
+    subject(:facets) { feed_factory("q=foo&facets=tags&facet.variant=term").facets }
+    it {
+      expect(facets["tags"][0]).to eq("foo")
+    }
+  end
+
+  context "#facets [LEGACY]" do
 
     subject(:facets) { feed_factory("q=foo&facets=tags").facets }
 
