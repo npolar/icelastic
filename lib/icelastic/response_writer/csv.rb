@@ -40,7 +40,7 @@ module Icelastic
         self.documents = feed["feed"]["stats"] ? feed["feed"]["stats"] : feed["feed"]["entries"]
       end
 
-      def sep
+      def col_sep
         sep = self.class.sep
         if params.key? "sep"
           sep = params["sep"]
@@ -50,7 +50,7 @@ module Icelastic
 
       def build
         # Build the csv document
-        CSV.generate({:col_sep => params["sep"]||self.class.sep, :quote_char => "'"}) do |csv|
+        CSV.generate({:col_sep => col_sep, :quote_char => "'"}) do |csv|
           csv << header
           rows.each {|r| csv << r}
         end
