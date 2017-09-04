@@ -210,22 +210,28 @@ module Icelastic
         body_hash["aggregations"].map{|facet , obj| {facet => parse_buckets(facet, obj["buckets"])}}
       end
 
-      def facets_as_tuples
-        facets = {}
-        body_hash["aggregations"].each do |facet,b|
-          facets[facet] = b["buckets"].map {|bucket|
-            [ bucket["key"], bucket["doc_count"] ]
-          }
-        end
-        facets
+      def facets_as_terms
+        _facets_as_list({ count: false })
       end
 
-      def facets_as_terms
+      def facets_as_tuples
+        _facets_as_list({ count: true })
+      end
+
+      def _facets_as_list(arg = { count: true })
+        fo = facets_as_objects
         facets = {}
-        body_hash["aggregations"].each do |facet,b|
-          facets[facet] = b["buckets"].map {|bucket|
-            bucket["key"]
-          }
+        fo.keys.each do |k|
+          if fo.key? k and not fo[k].nil?
+            facets[k] = fo[k].map {|o|
+              if arg[:count]
+                v = [ o["term"],o["count"] ]
+              else
+                v = o["term"]
+              end
+              v
+            }
+          end
         end
         facets
       end
