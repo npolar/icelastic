@@ -7,11 +7,11 @@
 ### Real-world examples
 Icelastic is used in production at the Norwegian Polar Institute [API](http://api.npolar.no)s, below are some real-world example queries
 * [Searching](http://api.npolar.no/dataset/?q=glacier) **?q=**
-* [Filtering](http://api.npolar.no/oceanography/?q=&filter-collection=cast&filter-station=77) filter-{variable}=value 
+* [Filtering](http://api.npolar.no/oceanography/?q=&filter-collection=cast&filter-station=77) filter-{variable}=value
 * [Faceting](http://api.npolar.no/oceanography/?q=&facets=collection,station,sea_water_temperature) facets={variable[,varible2]}
-* [Range-faceting](http://api.npolar.no/oceanography/?q=&rangefacet-sea_water_temperature=10,&rangefacet-latitude=10) (aka. bucketing) 
+* [Range-faceting](http://api.npolar.no/oceanography/?q=&rangefacet-sea_water_temperature=10,&rangefacet-latitude=10) (aka. bucketing)
 
-### Multiple response formats 
+### Multiple response formats
 The default Icelastic response format is a [JSON feed]() modeled after Atom/[OpenSearch](http://www.opensearch.org/Specifications/OpenSearch/1.1#Example_of_OpenSearch_response_elements_in_Atom_1.0).
 
 * [JSON](http://api.npolar.no/dataset/?q=&format=json) format=json
@@ -60,19 +60,19 @@ use ::Rack::Icelastic, {
 
 module My
   class ElasticsearchCDLWriter
-    
+
     def self.format
       "cdl"
     end
-    
+
     def self.type
       "text/plain"
     end
-    
+
     def initialize(request, elasticsearch_response_hash)
       @feed = Icelastic::ResponseWriter::Feed.new(request, elasticsearch_response_hash)
     end
-          
+
     def build
       @feed.build do |feed|
         "netcdf {}" # build response here
@@ -128,13 +128,14 @@ end
   "?date-<interval>=<field1>,<field2>" # Generate a date facet with the specified interval (year|month|day)
 
   "?size-facet=<number>" # Specify the number of facets to return
+  "?facet.variant=<variant>" # Available variants: object,tuple, term
 ```
 
 #### Aggregations
 
 ```ruby
   "?date-<interval>=<field>[<field1>:<field2>]" # Specify a temporal aggregation
-  
+
   "?rangefacet-<field>=<interval>" # Range facet with interval
 ```
 
