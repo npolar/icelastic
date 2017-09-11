@@ -37,7 +37,11 @@ module Icelastic
       private
 
       def aggregation_size
+        if params.key? "facet.limit"
+          params["facet.limit"].to_i
+        else
          extract_params(SIZE_REGEX).values.first.to_i  if extract_params(SIZE_REGEX).any?
+        end
       end
 
       def enabled?
