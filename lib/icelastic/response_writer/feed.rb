@@ -28,7 +28,7 @@ module Icelastic
         end
         if params["variant"] == "compact"
           if limit > 0
-            return [entries[0].keys]+entries.map {|e| e.values}
+            return [entries.last.keys]+entries.map {|e| e.values}
           else
             raise ArgumentError.new("400 Bad request: Limit > 0 is required for compact array response")
           end
@@ -168,13 +168,72 @@ module Icelastic
         end
       end
 
-      # Facet hash
-      # @todo https://github.com/npolar/icelastic/issues/11
+      # Facets
       def facets
+
+        if not params.key? "facet.variant"
+          facets_legacy_array
+        else
+
+          if false == facets?
+            return {}
+          end
+
+          case params["facet.variant"]
+          when "object"
+            # Implements https://github.com/npolar/icelastic/issues/11
+            facets_as_objects # { term:"", count:N, uri: ""}
+          when "tuple"
+            facets_as_tuples # [term, count]
+          when "term"
+            facets_as_terms # term (no count)
+          else
+            raise "Unknown facet variant: #{ params["facet.variant"] }"
+          end
+        end
+      end
+
+      def facets_as_objects
+        facets = {}
+        body_hash["aggregations"].each do |facet,b|
+          facets[facet] = b["buckets"].map {|bucket|
+            parse_buckets facet, b["buckets"]
+          }[0]
+        end
+        facets
+      end
+
+      def facets_legacy_array
         if false == facets?
           return []
         end
         body_hash["aggregations"].map{|facet , obj| {facet => parse_buckets(facet, obj["buckets"])}}
+      end
+
+      def facets_as_terms
+        _facets_as_list({ count: false })
+      end
+
+      def facets_as_tuples
+        _facets_as_list({ count: true })
+      end
+
+      def _facets_as_list(arg = { count: true })
+        fo = facets_as_objects
+        facets = {}
+        fo.keys.each do |k|
+          if fo.key? k and not fo[k].nil?
+            facets[k] = fo[k].map {|o|
+              if arg[:count]
+                v = [ o["term"],o["count"] ]
+              else
+                v = o["term"]
+              end
+              v
+            }
+          end
+        end
+        facets
       end
 
       def parse_buckets(facet, buckets)

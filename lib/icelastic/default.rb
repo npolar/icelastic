@@ -4,8 +4,8 @@ module Icelastic
     DEFAULT_PARAMS = {
       "start" => 0,
       "limit" => 100,
-      "size-facet" => 10,
-      "variant" => "legacy"
+      "size-facet" => 10, # deprecated for facet.limit
+      "variant" => "legacy" # legacy|atom affects opensearch links to self next etc.
     }
 
     GEO_PARAMS = {
